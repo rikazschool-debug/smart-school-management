@@ -4,7 +4,7 @@ import { sqlAdmin, sql } from "./lib/sql-admin";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
-const env = Object.fromEntries(readFileSync("/tmp/repo/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
+const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env["VITE_SUPABASE_URL"]!, PK = env["VITE_SUPABASE_PUBLISHABLE_KEY"]!;
 const admin: any = sqlAdmin(); const run = Date.now(), pw = "Test-" + crypto.randomUUID(); const tr = new TestRun(admin, "automation-scale-e2e");
 let ok = 0, bad = 0; const R: any[] = []; const check = (n: string, c: boolean, e?: unknown) => { c ? ok++ : bad++; console.log(c ? "PASS" : "FAIL", n, c ? "" : JSON.stringify(e)?.slice(0, 500)); };

@@ -1,7 +1,9 @@
 // Test-only stand-in for the service-role client: runs the same calls through the scoped Management API SQL endpoint
 // (no service key needed). Supports the subset the automation suites use. Never used by the app.
 import { readFileSync } from "fs";
-const TOKEN = readFileSync(process.env["SB_TOKEN_FILE"]!, "utf8").trim();
+import { createClient } from "@supabase/supabase-js";
+// Without a scoped SQL token (SB_TOKEN_FILE) the suites fall back to the real service-role client from the sandbox environment.
+const TOKEN = process.env["SB_TOKEN_FILE"] ? readFileSync(process.env["SB_TOKEN_FILE"], "utf8").trim() : "";
 const REF = process.env["SB_REF"]!;
 export async function sql(q: string): Promise<{ rows?: any[]; error?: { message: string } }> {
   for (let i = 0; i < 5; i++) {
@@ -79,7 +81,8 @@ async function rpc(fn: string, args: Record<string, any> = {}) {
   if (rows.length === 1 && Object.keys(rows[0]).length === 1 && fn in rows[0]) return { data: rows[0][fn] === "" ? null : rows[0][fn], error: null };
   return { data: rows, error: null };
 }
-export function sqlAdmin() {
+export function sqlAdmin(): any {
+  if (!TOKEN && process.env["SUPABASE_SERVICE_ROLE_KEY"]) return createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_SERVICE_ROLE_KEY"]!, { auth: { persistSession: false } });
   const noop = { remove: async () => ({ data: null, error: null }), upload: async () => ({ data: null, error: null }), download: async () => ({ data: null, error: { message: "storage unsupported in sql-admin" } }) };
   return {
     from: (t: string) => new QB(t), rpc,

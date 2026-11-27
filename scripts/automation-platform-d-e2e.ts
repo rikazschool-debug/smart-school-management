@@ -236,6 +236,12 @@ try {
     { type: "set", field: "priority", value: "urgent" },
     { type: "report", key: "snap", title: "لقطة طلبات الصيانة", source: "ds.maintenance", fields: ["ref", "title", "status", "days_open"], share: [{ by: "role", role: "principal" }] }] });
   const pri = must(await admin.from("mt_requests").select("priority").eq("id", req[0]?.id).single(), "pri") as any;
+  // files render asynchronously in the shared worker (kicked from the tick), so wait for this rule's file-ready notice before counting
+  const rep6id = (((await admin.from("au_reports").select("id").eq("rule_id", OR)).data ?? []) as any[])[0]?.id;
+  for (let i = 0; i < 45 && rep6id; i++) {
+    const c = (await admin.from("notifications").select("id", { count: "exact", head: true }).in("user_id", orgUsers).eq("link", "/app/auto-reports/" + rep6id)).count ?? 0;
+    if (c > 0) break; await new Promise((r) => setTimeout(r, 2000));
+  }
   const nAfter = (await admin.from("notifications").select("id", { count: "exact", head: true }).in("user_id", orgUsers)).count;
   const pev = ((await admin.from("mt_events").select("action").eq("request_id", req[0]?.id).eq("action", "priority")).data ?? []).length;
   check("allowed field updated and logged in the maintenance history", pri.priority === "urgent" && pev === 1, { pri, pev });

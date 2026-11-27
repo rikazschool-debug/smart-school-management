@@ -6,7 +6,12 @@
 - [ ] Sanad browser journey (write → save → designer) — not yet run
 - [ ] Sanad: explain existing rules / analyse simulation failures / summarise runs
 - [ ] Templates needing org choices: maintenance request (category), activities, integrations
-- [ ] Phase G: 1458 pre-existing linter findings, load/concurrency/recovery under real execution, 1-min vs 5-min comparison
+- [x] Phase G security: classify linter findings, revoke 31 unused internal helpers, registry-read/delegation/direct-call test (automation-security-g-e2e 23/23)
+- [x] Fix stale fixtures in attendance-e2e / class-room-group-e2e (approved catalogue names, term, teacher row)
+- [ ] attendance-e2e "late" check fails only after midnight Riyadh (start = now-30min wraps to previous day) — rerun in daytime
+- [ ] B2: ds.api.duty_rosters read timeout under the suite
+- [ ] Sanad finance draft intermittently empty; response time 20–70s
+- [ ] Phase G performance: load 1k/10k/50k with real execution, concurrency/recovery, 1-min vs 5-min comparison
 - [ ] Phase 9: designer-driven acceptance scenarios 1–6, 8–10; full regression rerun; backup/restore test
 - [ ] Leaked-password protection — blocked: owner turns it on in the Supabase dashboard
 

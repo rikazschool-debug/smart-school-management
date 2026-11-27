@@ -33,9 +33,10 @@ try {
   const B = (await owner2.c.from("schools").select("id").eq("org_id", org2).single()).data!.id; tr.addSchool(B);
   const ins = async (cl: any, school: string, tb: string, v: any) => { const r = await cl.from(tb).insert({ ...v, school_id: school }).select().single(); if (r.error) throw new Error(tb + " " + r.error.message); return r.data; };
   const year = await ins(owner.c, A, "academic_years", { name: "1448", start_date: "2026-01-01", end_date: "2027-12-31", is_current: true });
-  const stage = await ins(owner.c, A, "stages", { name: "متوسط" });
-  const grade = await ins(owner.c, A, "grades", { name: "الأول", stage_id: stage.id });
-  const secA = await ins(owner.c, A, "sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });
+  const stage = await ins(owner.c, A, "stages", { name: "المتوسطة" });
+  const grade = await ins(owner.c, A, "grades", { name: "أول", stage_id: stage.id });
+  const term = await ins(owner.c, A, "terms", { year_id: year.id, name: "الفصل الأول", start_date: "2026-01-01", end_date: "2027-12-31" });
+  const secA = await ins(owner.c, A, "sections", { name: "أ", grade_id: grade.id, year_id: year.id, term_id: term.id, capacity: 30 });
   const mkStudent = async (n: string, email?: string) => { const s = await ins(owner.c, A, "students", { full_name: n, gender: "male", ...(email ? { email } : {}) }); await ins(owner.c, A, "enrollments", { student_id: s.id, section_id: secA.id, year_id: year.id }); return s; };
   const s1 = await mkStudent("خالد المسح"), s2 = await mkStudent("سعد الثاني"), s3 = await mkStudent("غير المرتبط"), sSelf = await mkStudent("طالب الحساب", stu.email);
   for (const [u, role] of [[vp, "vice_principal"], [sec, "security"], [co, "counselor"], [te, "teacher"], [gu, "guardian"], [gu2, "guardian"], [stu, "student"]] as const) {
@@ -51,7 +52,7 @@ try {
   const dep = await ins(owner.c, A, "departments", { name: "عام" });
   const sub = await ins(owner.c, A, "subjects", { name: "لغتي", department_id: dep.id });
   const course = await ins(owner.c, A, "courses", { year_id: year.id, subject_id: sub.id, section_id: secA.id });
-  const tRow = await ins(owner.c, A, "teachers", { full_name: "معلم الشعبة", email: te.email, department_id: dep.id });
+  const tRow = await ins(admin, A, "teachers", { full_name: "معلم الشعبة", email: te.email, department_id: dep.id });
   await admin.from("teachers").update({ user_id: te.id }).eq("id", tRow.id);
   const asg = await ins(owner.c, A, "teacher_assignments", { course_id: course.id, teacher_id: tRow.id });
   await owner.c.rpc("decide_assignment", { _id: asg.id, _approve: true });

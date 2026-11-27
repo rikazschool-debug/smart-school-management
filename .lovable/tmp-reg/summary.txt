@@ -1,0 +1,18 @@
+automation-e2e rc=0 19s 30 passed, 0 failed
+automation-registry-e2e rc=0 30s 42 passed, 0 failed
+automation-registry-sources-e2e rc=1 0s 
+automation-phase4-e2e rc=0 142s 105 passed, 0 failed
+automation-phase4b-e2e rc=0 67s 67 passed, 0 failed
+automation-phase5-e2e rc=0 29s 50 passed, 0 failed
+automation-phase6-e2e rc=0 67s 82 passed, 0 failed
+automation-platform-b-e2e rc=0 91s 67 passed, 0 failed
+automation-platform-b2-e2e rc=1 181s 37 passed, 2 failed
+automation-platform-b3-e2e rc=0 12s 54 passed, 0 failed
+automation-platform-c-e2e rc=0 33s 45 passed, 0 failed
+automation-platform-c2-e2e rc=0 36s 45 passed, 0 failed
+automation-platform-d-e2e rc=1 50s 50 passed, 1 failed
+automation-platform-e-e2e rc=0 91s 61 passed, 0 failed
+automation-templates-e2e rc=0 20s 36 passed, 0 failed
+automation-sanad-e2e rc=0 100s 17 passed, 1 failed
+automation-fin-parity-e2e rc=0 2s 
+DONE

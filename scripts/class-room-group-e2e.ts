@@ -35,12 +35,15 @@ try {
   const mem = (u: string, s: string, role: string) => ({ user_id: users[u], org_id: org, school_id: s, role });
   must(await admin.from("memberships").insert([mem("p1", s0, "principal"), mem("co", s0, "counselor"), mem("p2", s1x, "principal"), mem("co2", s1x, "counselor"),
     mem("t1", s0, "teacher"), mem("t2", s0, "teacher"), mem("s1", s0, "student"), mem("s2", s0, "student"), mem("s3", s0, "student"), mem("g1", s0, "guardian"), mem("gx", s0, "guardian")]));
-  const y = (await ins("academic_years", { school_id: s0, name: "1448", start_date: "2026-08-01", end_date: "2027-06-30", is_current: true })).id;
-  const st = (await ins("stages", { school_id: s0, name: "متوسط" })).id;
-  const gr = (await ins("grades", { school_id: s0, stage_id: st, name: "الأول" })).id;
-  const A = (await ins("sections", { school_id: s0, grade_id: gr, year_id: y, name: "أ" })).id;
-  const B = (await ins("sections", { school_id: s0, grade_id: gr, year_id: y, name: "ب" })).id;
-  const C = (await ins("sections", { school_id: s0, grade_id: gr, year_id: y, name: "ج" })).id;
+  // academic setup rows are owner-only (guard triggers), so they go through the owner session
+  const insO = async (t: string, row: Record<string, unknown>) => must(await oc.from(t).insert(row).select("id").single()) as { id: string };
+  const y = (await insO("academic_years", { school_id: s0, name: "1448", start_date: "2026-08-01", end_date: "2027-06-30", is_current: true })).id;
+  const st = (await insO("stages", { school_id: s0, name: "المتوسطة" })).id;
+  const gr = (await insO("grades", { school_id: s0, stage_id: st, name: "أول" })).id;
+  const tm = (await insO("terms", { school_id: s0, year_id: y, name: "الفصل الأول", start_date: "2026-08-01", end_date: "2027-06-30" })).id;
+  const A = (await insO("sections", { school_id: s0, grade_id: gr, year_id: y, term_id: tm, name: "أ" })).id;
+  const B = (await insO("sections", { school_id: s0, grade_id: gr, year_id: y, term_id: tm, name: "ب" })).id;
+  const C = (await insO("sections", { school_id: s0, grade_id: gr, year_id: y, term_id: tm, name: "ج" })).id;
   const math = (await ins("subjects", { school_id: s0, name: "رياضيات" })).id;
   const course = async (sec: string) => (await ins("courses", { school_id: s0, year_id: y, subject_id: math, section_id: sec })).id;
   const cA = await course(A), cB = await course(B), cC = await course(C);
@@ -75,7 +78,7 @@ try {
   check("notification link opens the classroom tab", (must(await admin.rpc("_conv_link", { _conv: GA })) as string) === `/app/classrooms/section/${RA}?tab=group`);
 
   // empty section: creating it alone (no students, no subjects) prepares its digital classroom + one class group
-  const E = (await ins("sections", { school_id: s0, grade_id: gr, year_id: y, name: "د" })).id;
+  const E = (await insO("sections", { school_id: s0, grade_id: gr, year_id: y, term_id: tm, name: "د" })).id;
   const RE = must(await admin.from("section_rooms").select("id").eq("section_id", E)) as any[];
   const gE = await groupOf(E);
   check("empty section: classroom ready on creation", RE.length === 1, RE);
