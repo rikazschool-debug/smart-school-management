@@ -30352,6 +30352,8 @@ export type Database = {
         Args: { _student: string; _teacher: string }
         Returns: boolean
       }
+      _student_read_ids: { Args: never; Returns: string[] }
+      _student_read_schools: { Args: never; Returns: string[] }
       _support_action_core: {
         Args: {
           _action: string
