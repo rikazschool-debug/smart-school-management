@@ -4,6 +4,7 @@ import { sqlAdmin, sql } from "./lib/sql-admin";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { purgeLoadOrg } from "./lib/load-cleanup";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env["VITE_SUPABASE_URL"]!, PK = env["VITE_SUPABASE_PUBLISHABLE_KEY"]!;
 const admin: any = sqlAdmin(); const run = Date.now(), pw = "Test-" + crypto.randomUUID(); const tr = new TestRun(admin, "automation-scale-e2e");
@@ -35,6 +36,6 @@ try {
 } catch (e) { check("suite ran", false, (e as Error).stack?.split("\n").slice(0, 3).join(" | ")); }
 finally {
   await sql(`delete from hr_employees where employee_no like 'L-${run}-%'`).catch(() => {});
-  await tr.deleteNotifications().catch(() => {}); for (const o of orgs) await tr.purgeOrg(o).catch(() => {}); for (const u of tr.users) await admin.auth.admin.deleteUser(u);
+  await tr.deleteNotifications().catch(() => {}); for (const o of orgs) await purgeLoadOrg(admin, tr, o); for (const u of tr.users) await admin.auth.admin.deleteUser(u);
 }
 console.log(`\n${ok} passed, ${bad} failed`); console.log("RESULT " + JSON.stringify(R));

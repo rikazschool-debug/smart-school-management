@@ -9,7 +9,8 @@
 - [x] Phase G security: classify linter findings, revoke 31 unused internal helpers, registry-read/delegation/direct-call test (automation-security-g-e2e 23/23)
 - [x] Fix stale fixtures in attendance-e2e / class-room-group-e2e (approved catalogue names, term, teacher row)
 - [x] attendance-e2e midnight wrap fixed (look-back capped to minutes since midnight; waits out 23:55–00:02) — 106/106; midnight path itself not run
-- [ ] B2: duty_rosters timeout — likely leftover load orgs (~136k synthetic students) slowing RLS; purged via scripts/purge-load-orgs.ts; rerun B2 to confirm
+- [x] B2 39/39 after purging leftover load orgs; load suites now clean up in chunks (scripts/lib/load-cleanup.ts)
+- [ ] students read policy slow per row (family-readonly-e2e timeout at ~9.7k students) — needs a decision, access rules untouched
 - [x] Sanad empty draft: def normalised + one retry; source step thinking minimal (20/20 in 16s once)
 - [ ] Sanad stability runs blocked by Gemini key rate limit (429)
 - [ ] Phase G performance: load 1k/10k/50k with real execution, concurrency/recovery, 1-min vs 5-min comparison

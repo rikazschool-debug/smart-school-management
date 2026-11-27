@@ -5,6 +5,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { purgeLoadOrg } from "./lib/load-cleanup";
 const N = Number(process.argv[2] ?? 10000);
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env["VITE_SUPABASE_URL"]!, PK = env["VITE_SUPABASE_PUBLISHABLE_KEY"]!;
@@ -42,7 +43,7 @@ try {
   const [, other] = await time(() => admin.from("schools").select("id").limit(1)); out["core_read_during_ms"] = other;
 } catch (e) { out["error"] = (e as Error).message; }
 finally {
-  if (org) { await admin.from("students").delete().in("school_id", [...tr.schools]); await tr.purgeOrg(org).catch((e) => (out["purge"] = e.message)); }
+  if (org) { const e = await purgeLoadOrg(admin, tr, org); if (e) out["purge"] = e; }
   for (const u of tr.users) await admin.auth.admin.deleteUser(u);
   writeFileSync(`/tmp/au-b2-perf-${N}.json`, JSON.stringify(out, null, 1)); console.log(JSON.stringify(out));
 }

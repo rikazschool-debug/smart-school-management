@@ -8,6 +8,7 @@ import "./lib/au-suite-lock.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { purgeLoadOrg } from "./lib/load-cleanup";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env["VITE_SUPABASE_URL"]!, PK = env["VITE_SUPABASE_PUBLISHABLE_KEY"]!;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -89,7 +90,7 @@ try {
   check("removing the grant removes the automation read again", (await rps("organize")).data === false);
 } catch (e) { check("suite ran", false, (e as Error).message); }
 finally {
-  for (const o of orgs) await tr.purgeOrg(o).catch(() => {});
+  for (const o of orgs) await purgeLoadOrg(admin, tr, o);
   await tr.done?.().catch?.(() => {});
 }
 console.log(`${ok} passed, ${bad} failed`); process.exit(bad ? 1 : 0);

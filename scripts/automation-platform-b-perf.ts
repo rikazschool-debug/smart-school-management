@@ -5,6 +5,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { purgeLoadOrg } from "./lib/load-cleanup";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env["VITE_SUPABASE_URL"]!, PK = env["VITE_SUPABASE_PUBLISHABLE_KEY"]!;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -63,7 +64,7 @@ try {
   out.batch1000_ms = Date.now() - b;
 } catch (e) { console.log("ERROR", (e as Error).stack ?? e); out.error = String(e); }
 finally {
-  if (org) { await admin.from("attendance_days").delete().in("school_id", [...tr.schools]); await admin.from("adm_tasks").delete().in("school_id", [...tr.schools]); await tr.purgeOrg(org).catch((e) => console.log("purge", e.message)); }
+  if (org) { await admin.from("attendance_days").delete().in("school_id", [...tr.schools]); await admin.from("adm_tasks").delete().in("school_id", [...tr.schools]); await purgeLoadOrg(admin, tr, org); }
   for (const u of tr.users) await admin.auth.admin.deleteUser(u);
   writeFileSync(`/tmp/au-perf-${NS}.json`, JSON.stringify(out, null, 1)); console.log(JSON.stringify(out));
 }
