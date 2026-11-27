@@ -22,7 +22,7 @@ type F = string;
 class QB implements PromiseLike<any> {
   op = "select"; cols = "*"; filters: F[] = []; payload: any; ord: string[] = []; lim?: number; mode: "many" | "single" | "maybe" = "many"; head = false; count = false;
   constructor(private t: string) {}
-  select(c = "*", o?: any) { if (this.op === "select") { this.cols = c; if (o?.head) this.head = true; if (o?.count) this.count = true; } else this.cols = c; return this; }
+  select(c = "*", o?: any) { if (this.op === "select") { this.cols = c; if (o?.head) this.head = true; if (o?.count) this.count = true; } else { this.cols = c; (this as any).ret = true; } return this; }
   insert(p: any) { this.op = "insert"; this.payload = p; return this; }
   upsert(p: any, o?: any) { this.op = "upsert"; this.payload = p; (this as any).onc = o?.onConflict; return this; }
   update(p: any) { this.op = "update"; this.payload = p; return this; }
@@ -56,12 +56,12 @@ class QB implements PromiseLike<any> {
   async run() {
     if (/\w\s*(!inner)?\(/.test(this.cols) && this.cols.includes("(") && this.op === "select") return { data: null, error: { message: "embedded select unsupported in sql-admin: " + this.cols }, count: null, status: 400 };
     const r = await sql(this.build());
-    if (r.error) return { data: null, error: { message: r.error.message, code: "sql" }, count: null, status: 400 };
+    if (r.error) return { data: null, error: { message: r.error.message, code: /duplicate key/.test(r.error.message) ? "23505" : "sql" }, count: null, status: 400 };
     let rows: any[] = r.rows![0].r; const cnt = Number(r.rows![0].c);
     if (this.cols !== "*" && !this.cols.includes("(")) { const ks = this.cols.split(",").map((s) => s.trim()).filter(Boolean); rows = rows.map((x) => Object.fromEntries(ks.map((k) => [k, x[k]]))); }
     if (this.mode === "single") { if (rows.length !== 1) return { data: null, error: { message: rows.length ? "multiple rows" : "no rows", code: "PGRST116" }, count: cnt, status: 406 }; return { data: rows[0], error: null, count: cnt, status: 200 }; }
     if (this.mode === "maybe") return { data: rows[0] ?? null, error: null, count: cnt, status: 200 };
-    const wantsRows = this.op === "select" || this.cols !== "*";
+    const wantsRows = this.op === "select" || this.cols !== "*" || (this as any).ret === true;
     return { data: this.head ? null : (this.op === "select" || wantsRows ? rows : null), error: null, count: this.count || this.head ? cnt : null, status: 200 };
   }
   then<A, B>(f?: any, g?: any): Promise<A | B> { return this.run().then(f, g); }
@@ -70,7 +70,7 @@ async function rpc(fn: string, args: Record<string, any> = {}) {
   const mk = (arrAsPg: boolean) => Object.entries(args).map(([k, v]) => `${id(k)} => ${Array.isArray(v) && arrAsPg ? pgArr(v) : lit(v)}`).join(", ");
   let r = await sql(`select coalesce(jsonb_agg(to_jsonb(t)),'[]'::jsonb) r from (select * from public.${id(fn)}(${mk(true)})) t`);
   if (r.error && Object.values(args).some(Array.isArray) && /does not exist|invalid input syntax|malformed/.test(r.error.message)) r = await sql(`select coalesce(jsonb_agg(to_jsonb(t)),'[]'::jsonb) r from (select * from public.${id(fn)}(${mk(false)})) t`);
-  if (r.error) return { data: null, error: { message: r.error.message, code: "sql" } };
+  if (r.error) return { data: null, error: { message: r.error.message, code: /duplicate key/.test(r.error.message) ? "23505" : "sql" } };
   const rows: any[] = r.rows![0].r;
   if (rows.length === 1 && Object.keys(rows[0]).length === 1 && fn in rows[0]) return { data: rows[0][fn] === "" ? null : rows[0][fn], error: null };
   return { data: rows, error: null };

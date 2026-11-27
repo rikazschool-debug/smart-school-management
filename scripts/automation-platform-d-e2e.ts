@@ -7,6 +7,7 @@ import "./lib/au-suite-lock.ts";
 // Run: NODE_PATH=node_modules bun scripts/automation-platform-d-e2e.ts   (writes /tmp/au-platform-d.json)
 import { auApprove } from "./lib/au-approve";
 import { createClient } from "@supabase/supabase-js";
+import { compile, decompile } from "../src/components/automation/designer/flow";
 import { readFileSync, writeFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
 import { auTick } from "./lib/au-tick";
@@ -30,7 +31,11 @@ const ins = async (t: string, row: any) => { const r = await admin.from(t).inser
 const must = <T>(r: { data: T; error: any }, what: string): T => { if (r.error) throw new Error(`${what}: ${r.error.message}`); return r.data; };
 const orgs: string[] = [];
 let owner: any, org = "", S = "";
-const save = (name: string, event: string, def: any, c = owner.c) => c.rpc("au_rule_save", { _org: org, _id: null, _name: name, _event: event, _schools: null, _def: def });
+let dsgnOk = 0; const dsgnBad: string[] = [];
+// every rule below goes through the designer compiler first: graph + rule meta (schedule/mode/batch live outside the graph, as in designer.tsx) must give the same definition the engine runs
+const canon = (v: any): any => Array.isArray(v) ? v.map(canon) : v && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v;
+const viaDesigner = (name: string, def: any) => { if (name === "x") return def; try { const { when: _w, steps: _s, ...meta } = def; const g = decompile(def); const r = compile(g.nodes, g.edges); const out = { ...meta, ...r.def }; const same = JSON.stringify(canon(out)) === JSON.stringify(canon(def)) && !r.issues.some((i) => i.level === "error"); same ? dsgnOk++ : dsgnBad.push(name); return out; } catch { dsgnBad.push(name); return def; } };
+const save = (name: string, event: string, def: any, c = owner.c) => c.rpc("au_rule_save", { _org: org, _id: null, _name: name, _event: event, _schools: null, _def: viaDesigner(name, def) });
 const rejects = async (event: string, def: any) => { const r = await save("x", event, def); return r.error ? r.error.message : null; };
 const daily = { type: "daily", at: "07:00", quiet: false };
 async function go(id: string) { const a = await auApprove(owner.c, id); if (a.error) throw a.error; const b = await owner.c.rpc("au_rule_set_active", { _id: id, _on: true }); if (b.error) throw b.error; }
@@ -234,7 +239,10 @@ try {
   const nAfter = (await admin.from("notifications").select("id", { count: "exact", head: true }).in("user_id", orgUsers)).count;
   const pev = ((await admin.from("mt_events").select("action").eq("request_id", req[0]?.id).eq("action", "priority")).data ?? []).length;
   check("allowed field updated and logged in the maintenance history", pri.priority === "urgent" && pev === 1, { pri, pev });
-  check("fully operational rule ran with zero notifications", nBefore === nAfter && ((await admin.from("au_reports").select("id").eq("rule_id", OR)).data ?? []).length === 1, { nBefore, nAfter });
+  const fileNotes = ((await admin.from("notifications").select("title,link").in("user_id", orgUsers).like("dedupe_key", "au:file:%")).data ?? []) as any[];
+  const rep6 = ((await admin.from("au_reports").select("id").eq("rule_id", OR)).data ?? []) as any[];
+  const msg6 = ((await admin.from("au_msgs").select("id").eq("rule_id", OR)).data ?? []) as any[];
+  check("scenario 6: operational rule made one report, no message/WhatsApp, and the only new notice is the file-ready notice (user decision: keep it) linking to the report", rep6.length === 1 && msg6.length === 0 && (nAfter ?? 0) - (nBefore ?? 0) === fileNotes.filter((n) => n.link === "/app/auto-reports/" + rep6[0]?.id).length && fileNotes.filter((n) => n.link === "/app/auto-reports/" + rep6[0]?.id).length >= 1, { nBefore, nAfter, fileNotes, msg6 });
   const cat2 = await ins("mt_categories", { org_id: org, kind: "school", name: "فئة اختبار D " + run, active: true });
   await allOff(); await ins("org_docs", { org_id: org, school_id: S, kind: "رخصة", name: "رخصة الفشل", expires_on: day(5) });
   const fsv = await save("مسار الفشل", "ds.org_docs", { schedule: daily, when: { var: "name", op: "contains", value: "الفشل" }, steps: [
@@ -263,6 +271,7 @@ finally {
   await tr.deleteNotifications().catch((e) => console.log("cleanup notes", e.message)); for (const o of orgs) await tr.purgeOrg(o).catch((e) => console.log("purge", e.message));
   for (const u of tr.users) await admin.auth.admin.deleteUser(u);
 }
+check(`designer compiler: all ${dsgnOk + dsgnBad.length} scenario rules compile (graph round-trip) to exactly the definition the engine ran`, dsgnBad.length === 0 && dsgnOk >= 6, dsgnBad);
 writeFileSync("/tmp/au-platform-d.json", JSON.stringify({ ok, bad, M }, null, 1));
 console.log(`\n${ok} passed, ${bad} failed`);
 process.exit(bad ? 1 : 0);
