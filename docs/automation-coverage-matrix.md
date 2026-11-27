@@ -1,6 +1,6 @@
 # مصفوفة تغطية الأتمتة — الحالة الفعلية حتى المرحلة E
 
-مولّدة من سجلات الاختبار في 2026-11-26 عبر `scripts/automation-expansion-matrix.ts` (قراءة فقط). لا تُحرَّر يدويًا.
+مولّدة من سجلات الاختبار في 2026-11-27 عبر `scripts/automation-expansion-matrix.ts` (قراءة فقط). لا تُحرَّر يدويًا.
 
 هذا الملف يصف الحالة الفعلية المسجلة، وليس اقتراح المرحلة A. «مختَبَر» تخص مصدر البيانات؛ لا تعني جاهزية كل إجراء أو قناة، ولا اكتمال المرحلة E. راجع تقرير المرحلة E للفجوات والأدلة.
 
@@ -138,16 +138,43 @@
 
 ## التفاعل بعد حفظ المعاملة
 
-التفاعل خلال دورة العامل التالي مربوط حاليًا لـ12 مصدرًا من 39 مصدر بيانات مختبر. بقية المصادر تبقى على المسح المجدول؛ التغطية الفورية الكاملة غير مكتملة.
+التفاعل خلال دورة العامل التالي مربوط حاليًا لـ39 مصدرًا من 39 مصدر بيانات مختبر. بقية المصادر تبقى على المسح المجدول؛ التغطية الفورية الكاملة غير مكتملة.
 
 - `ds.admin_tasks`
+- `ds.api.admin_decisions`
+- `ds.api.admin_meetings`
 - `ds.api.admin_requests`
 - `ds.api.admissions`
 - `ds.api.buses`
 - `ds.api.circulars`
+- `ds.api.courses`
 - `ds.api.custodies`
+- `ds.api.discounts`
+- `ds.api.duty_assignments`
+- `ds.api.duty_rosters`
+- `ds.api.event_applications`
+- `ds.api.event_sessions`
+- `ds.api.events`
+- `ds.api.gate_movements`
+- `ds.api.gifted_programs`
+- `ds.api.guidance_programs`
+- `ds.api.health_calendar`
+- `ds.api.homework`
+- `ds.api.hr_assets`
+- `ds.api.hr_attendance`
+- `ds.api.hr_employees`
 - `ds.api.hr_leaves`
+- `ds.api.hr_vacancies`
+- `ds.api.notices`
+- `ds.api.procurement_expenses`
+- `ds.api.procurement_requests`
+- `ds.api.students`
+- `ds.api.substitutions`
 - `ds.api.support_tickets`
+- `ds.api.teacher_assignments`
+- `ds.api.timetables`
+- `ds.api.transport`
+- `ds.hr_docs`
 - `ds.maintenance`
 - `ds.org_docs`
 - `ds.student_absence`

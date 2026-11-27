@@ -7,4 +7,5 @@ s=re.sub(r'import \{ renderPendingFiles \} from "\.\./src/lib/au-files\.server";
 if 'sqlAdmin' not in s: s=s.replace('import { createClient }','import { sqlAdmin } from "./lib/sql-admin";\nimport { createClient }',1)
 s=s.replace('/dev-server/.env','/tmp/repo/.env')
 s=s.replace('const admin = createClient(process.env["SUPABASE_URL"]!, process.env["SUPABASE_SERVICE_ROLE_KEY"]!, { auth: { persistSession: false } });','const admin: any = sqlAdmin();')
+s=re.sub(r'const (\w+) = createClient\(process\.env\["SUPABASE_URL"\]!, process\.env\["SUPABASE_SERVICE_ROLE_KEY"\]!, \{ auth: \{ persistSession: false \} \}\);', r'const \1: any = sqlAdmin();', s)
 open(f'/tmp/repo/scripts/_run-{n}.ts','w').write(s)
