@@ -47,7 +47,9 @@ try {
   check("registry tables not directly readable", ((await owner.c.from("au_events").select("code")).data ?? []).length === 0);
   // every event source is a real table (or documented RPC/group source)
   const missing: string[] = [];
-  for (const e of R.events) { const src = String(e.source); if (/[*\s(]/.test(src) || src === "sf_dashboard") continue; const r = await admin.from(src).select("*", { head: true, count: "exact" }).limit(1); if (r.error) missing.push(`${e.code}:${src}`); }
+  for (const e of R.events) { const src = String(e.source); if (/[*\s(]/.test(src) || src === "sf_dashboard") continue;
+    // phase B+ operational sources read through the integration reader (_api_rows_all:<resource>): they are not tables; au_sources + the b2 suite check them
+    if (src.startsWith("_api_rows_all:")) { if (!R.sources.some((x: any) => x.event_code === e.code)) missing.push(`${e.code}:${src} (no registered source)`); continue; } const r = await admin.from(src).select("*", { head: true, count: "exact" }).limit(1); if (r.error) missing.push(`${e.code}:${src}`); }
   check("all event sources exist", missing.length === 0, missing);
   check("all trigger types proven and available (phase 4)", R.triggers.every((t: any) => t.available), R.triggers);
   check("forbidden actions registered as forbidden", ["finance_write", "delete_record", "grant_permission"].every((k) => R.actions.find((a: any) => a.code === k)?.readiness === "forbidden"));
