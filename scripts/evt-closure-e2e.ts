@@ -6,6 +6,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadRow } from "./lib/academic-fixture";
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "evc");
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
@@ -62,10 +63,11 @@ try {
     mem("g1", OA, S1, "guardian"), mem("g2", OA, S1, "guardian"), mem("pB", OB, SB, "principal")]);
   if (ins.error) throw ins.error;
   // academic structure + two siblings (k1,k2) of g1 and k3 of g2, enrolled in S1
-  const yr = (await admin.from("academic_years").insert({ school_id: S1, name: "1448", start_date: "2026-08-01", end_date: "2027-06-30", is_current: true }).select("id").single()).data!.id;
-  const stg = (await admin.from("stages").insert({ school_id: S1, name: "ابتدائي" }).select("id").single()).data!.id;
-  const gr = (await admin.from("grades").insert({ school_id: S1, stage_id: stg, name: "الرابع" }).select("id").single()).data!.id;
-  const sec = (await admin.from("sections").insert({ school_id: S1, grade_id: gr, year_id: yr, name: "4/أ" }).select("id").single()).data!.id;
+  const oaC = await as("ownerA"); // academic setup rows are owner-only (guard triggers)
+  const yr = (await oaC.from("academic_years").insert(await acadRow(oaC, "academic_years", { school_id: S1, name: "1448", start_date: "2026-08-01", end_date: "2027-06-30", is_current: true })).select("id").single()).data!.id;
+  const stg = (await oaC.from("stages").insert(await acadRow(oaC, "stages", { school_id: S1, name: "ابتدائي" })).select("id").single()).data!.id;
+  const gr = (await oaC.from("grades").insert(await acadRow(oaC, "grades", { school_id: S1, stage_id: stg, name: "الرابع" })).select("id").single()).data!.id;
+  const sec = (await oaC.from("sections").insert(await acadRow(oaC, "sections", { school_id: S1, grade_id: gr, year_id: yr, name: "4/أ" })).select("id").single()).data!.id;
   const gid: Record<string, string> = {};
   for (const [k, name, g] of [["k1", "عمر التجريبي", "g1"], ["k2", "علي التجريبي", "g1"], ["k3", "سعد الآخر", "g2"]] as const) {
     const st = await admin.from("students").insert({ school_id: S1, full_name: name }).select("id").single(); if (st.error) throw st.error; kids[k] = st.data.id;

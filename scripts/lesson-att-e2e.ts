@@ -6,6 +6,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -46,7 +47,7 @@ async function main() {
     const a = await owner.c.rpc("invite_member", { _email: u.email, _school: S, _role: r }); if (a.error) throw a.error;
     const b = await u.c.rpc("accept_my_invitations"); if (b.error) throw b.error;
   }
-  const ins = async (tb: string, v: any) => { const r = await admin.from(tb).insert({ school_id: S, ...v }).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
+  const ins = async (tb: string, v: any) => { const r = await acadClient(tb, admin, owner.c).from(tb).insert(await acadRow(owner.c, tb, { school_id: S, ...v })).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
   await ins("school_day_settings", { study_days: [0, 1, 2, 3, 4, 5, 6] });
   const P = await ins("periods", { sort_order: 1, name: "الحصة الأولى", start_time: "07:30", end_time: "08:15" });
   const year = await ins("academic_years", { name: "1448", start_date: addDays(today, -60), end_date: addDays(today, 200), is_current: true });

@@ -6,6 +6,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const DIR = "/tmp/browser/b48", FX = DIR + "/fixture.json";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
@@ -48,7 +49,7 @@ const org = (await U.owner!.c.rpc("create_organization", { _org_name: "مجمو�
 const S = (await admin.from("schools").select("id").eq("org_id", org).single()).data!.id as string;
 const m = await admin.from("memberships").insert([["pr", "principal"], ["r1", "security"], ["h1", "teacher"], ["t2", "teacher"], ["g1", "guardian"], ["st", "student"]].map(([u, role]) => ({ user_id: U[u!]!.id, org_id: org, school_id: S, role })));
 if (m.error) throw m.error;
-const ins = async (tb: string, v: any) => { const r = await admin.from(tb).insert({ school_id: S, ...v }).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
+const ins = async (tb: string, v: any) => { const r = await acadClient(tb, admin, U.owner!.c).from(tb).insert(await acadRow(U.owner!.c, tb, { school_id: S, ...v })).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
 await ins("school_day_settings", { study_days: [0, 1, 2, 3, 4, 5, 6] });
 const year = await ins("academic_years", { name: "1448", start_date: addDays(today, -60), end_date: addDays(today, 200), is_current: true });
 const stage = await ins("stages", { name: "متوسط" }); const grade = await ins("grades", { name: "الأول", stage_id: stage.id });

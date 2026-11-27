@@ -5,6 +5,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "crx");
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
@@ -16,7 +17,8 @@ const users: Record<string, string> = {}; const emails: Record<string, string> =
 let org = ""; const S: string[] = [];
 async function as(k: string) { const c = createClient(env.VITE_SUPABASE_URL, PK, { auth: { persistSession: false }, global: { fetch: shim as any } }); const s = await c.auth.signInWithPassword({ email: emails[k]!, password: pw }); if (s.error) throw s.error; return c; }
 const must = <T,>(r: { data: T; error: any }) => { if (r.error) throw r.error; return r.data; };
-const ins = async (t: string, row: Record<string, unknown>) => must(await admin.from(t).insert(row).select("id").single()) as { id: string };
+let ocRef: any; // owner session, set once signed in (academic rows are owner-only)
+const ins = async (t: string, row: Record<string, unknown>) => must(await acadClient(t, admin, ocRef).from(t).insert(await acadRow(ocRef, t, row)).select("id").single()) as { id: string };
 try {
   for (const t of ["owner", "p1", "p2", "t1", "t2", "t3", "s1", "s2", "g1"]) {
     const email = `crx-${t}-${run}@rikaz.test`;
@@ -24,7 +26,7 @@ try {
     if (r.error) throw r.error;
     users[t] = r.data.user!.id; emails[t] = email; tr.addUser(r.data.user!.id);
   }
-  const oc = await as("owner");
+  const oc = await as("owner"); ocRef = oc;
   org = must(await oc.rpc("create_organization", { _org_name: "مجموعة تجربة الفصول", _school_name: "مدرسة الفصول" })) as string;
   S.push(must(await admin.from("schools").select("id").eq("org_id", org).single())!.id);
   S.push((await ins("schools", { org_id: org, name: "مدرسة الفصول الثانية" })).id);
@@ -117,7 +119,7 @@ try {
   must(await admin.from("student_guardians").insert({ school_id: s0, student_id: k3, guardian_id: gd, relationship: "father", can_follow: true, verified: true }));
   check("sibling in old section: guardian opens both rooms", !(await G1.rpc("section_room_get", { _room: RA })).error && !(await G1.rpc("section_room_get", { _room: RB })).error);
   // class chat group: shown only to its members, independent of classroom access
-  must(await admin.from("academic_years").update({ is_current: true }).eq("id", y));
+  must(await ocRef.from("academic_years").update({ is_current: true }).eq("id", y));
   must(await admin.rpc("sync_class_group", { _section: A, _year: y }));
   const conv = (must(await admin.from("conversations").select("id").eq("group_type", "class").eq("section_id", A).single()) as any).id as string;
   const memb = async () => new Set(((must(await admin.from("conversation_members").select("user_id").eq("conversation_id", conv).is("left_at", null)) as any[])).map((m) => m.user_id));

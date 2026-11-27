@@ -16,13 +16,14 @@ export type DraftResult =
 
 const FORBIDDEN = /(احذف|حذف|امسح|مسح السجلات|عدّل الرصيد|عدل الرصيد|غيّر الرصيد|اعتمد السداد|اعتماد السداد|امنح صلاحي|منح صلاحي|فعّل القاعدة|فعل القاعدة|فعّلها|اعتمد القاعدة|webhook|ويب هوك)/;
 
-async function gemini(key: string, system: string, user: string): Promise<{ json?: Any; error?: string }> {
+async function gemini(key: string, system: string, user: string, fast = false): Promise<{ json?: Any; error?: string }> {
+  // fast = the short source-picking step: same model, no thinking budget (a lighter model picked wrong sources in tests)
   const model = process.env["GEMINI_MODEL"] || "gemini-3-flash-preview";
   if (!/^[a-z0-9.-]+$/.test(model)) return { error: "إعداد نموذج Gemini غير صالح" };
   const body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: "user", parts: [{ text: user }] }] };
   const call = (m: string, ms: number, plain = false) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
     method: "POST", signal: AbortSignal.timeout(ms), headers: { "content-type": "application/json", "x-goog-api-key": key },
-    body: JSON.stringify({ ...body, generationConfig: plain ? { responseMimeType: "application/json" } : { responseMimeType: "application/json", thinkingConfig: { thinkingLevel: "low" } } }),
+    body: JSON.stringify({ ...body, generationConfig: plain ? { responseMimeType: "application/json" } : { responseMimeType: "application/json", thinkingConfig: { thinkingLevel: fast ? "minimal" : "low" } } }),
   }).catch((e: unknown) => { console.error("sanad-automation gemini", m, e); return null; });
   const chain = [...new Set([model, "gemini-flash-latest", "gemini-flash-lite-latest"])];
   let res: Response | null = null;
@@ -33,9 +34,13 @@ async function gemini(key: string, system: string, user: string): Promise<{ json
   }
   if (!res) return { error: "تأخر رد سند، حاول مرة أخرى" };
   if (!res.ok) { console.error("sanad-automation HTTP", res.status, (await res.text().catch(() => "")).slice(0, 300)); return { error: res.status === 429 ? "خدمة سند مزدحمة الآن، حاول بعد دقيقة" : "تعذر الوصول إلى سند" }; }
-  const j = (await res.json()) as { candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[] };
+  const j = (await res.json()) as { candidates?: { finishReason?: string; content?: { parts?: { text?: string; thought?: boolean }[] } }[] };
   const text = (j.candidates?.[0]?.content?.parts ?? []).filter((p) => !p.thought).map((p) => p.text ?? "").join("").trim();
-  try { return { json: JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, "")) }; } catch { return { error: "لم يُكوّن سند مسودة صالحة، أعد صياغة الطلب" }; }
+  try {
+    let out = JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, ""));
+    if (Array.isArray(out)) out = out[0];
+    return { json: out };
+  } catch { console.error("sanad-automation unparsable", j.candidates?.[0]?.finishReason, text.length); return { error: "لم يُكوّن سند مسودة صالحة، أعد صياغة الطلب" }; }
 }
 
 const GRAMMAR = `صيغة تعريف القاعدة (JSON) التي يقبلها المحرك:
@@ -72,7 +77,7 @@ export async function buildAutomationDraft(sb: SupabaseClient, orgId: string, te
 أعد JSON: {"event": "<رمز من القائمة أو null>", "template": "<id قالب جاهز مناسب أو null>", "questions": ["أسئلة قصيرة فقط عن معلومات ناقصة ومؤثرة"], "refuse": "<سبب الرفض إن كان الطلب حذفًا أو تعديل أرصدة أو منح صلاحيات أو تفعيل أو إرسالًا خارجيًا، وإلا null>"}
 إن لم يناسب أي عنصر في القائمة فأعد event null واذكر سؤالًا.
 الأحداث والمصادر المتاحة لهذا المستخدم: ${JSON.stringify(events)}
-القوالب الجاهزة المتاحة: ${JSON.stringify(tplList)}`, `طلب المستخدم: ${text}`);
+القوالب الجاهزة المتاحة: ${JSON.stringify(tplList)}`, `طلب المستخدم: ${text}`, true);
   if (s1.error) return { error: s1.error };
   if (s1.json?.refuse) return { refused: String(s1.json.refuse).slice(0, 400) };
   const ev = events.find((e) => e.code === s1.json?.event);
@@ -92,8 +97,13 @@ export async function buildAutomationDraft(sb: SupabaseClient, orgId: string, te
 ${GRAMMAR}
 ${ctx}
 أعد JSON: {"name":"اسم عربي 3..80 حرفًا","description":"وصف قصير","def":{...},"summary":"شرح عربي مختصر بنقاط يبدأ كل سطر بـ - لما ستفعله القاعدة","questions":["معلومات ناقصة ومؤثرة فقط"]}`;
+  // The model sometimes returns def as a JSON string or under another key; an empty def was the intermittent
+  // "empty draft". Normalise, and retry once when no definition came back at all.
+  const defOf = (x: Any): Any => { let d = x?.def ?? x?.definition ?? x?.rule?.def ?? x?.rule ?? null; if (typeof d === "string") { try { d = JSON.parse(d); } catch { d = null; } } return d && typeof d === "object" && Array.isArray(d.steps) && d.steps.length ? d : null; };
   let s2 = await gemini(key, sys2, `طلب المستخدم: ${text}`);
   if (s2.error) return { error: s2.error };
+  if (!defOf(s2.json)) { console.error("sanad-automation empty def", Object.keys(s2.json ?? {})); const again = await gemini(key, sys2, `طلب المستخدم: ${text}\nأعد JSON كاملًا يحتوي الحقل def بخطوات steps غير فارغة.`); if (defOf(again.json)) s2 = again; }
+  if (s2.json) s2.json.def = defOf(s2.json);
   const check = async (def: Any) => { const v = await sb.rpc("au_validate" as never, { _org: orgId, _event: ev.code, _def: def } as never); if (v.error) return v.error.message.includes("forbidden") ? "لا تملك صلاحية إنشاء قواعد لهذا المصدر" : v.error.message; const d = v.data as Any; return d?.ok ? null : String(d?.error ?? "غير صالح"); };
   let problem = s2.json?.def ? await check(s2.json.def) : "لم يُكوّن تعريف";
   if (problem && !problem.startsWith("لا تملك")) {

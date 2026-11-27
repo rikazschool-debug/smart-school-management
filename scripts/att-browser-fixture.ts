@@ -3,6 +3,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -28,7 +29,7 @@ const owner = await user("owner"), vp = await user("vp"), sec = await user("secu
 const org = (await owner.c.rpc("create_organization", { _org_name: "مؤسسة تجربة الحضور", _school_name: "مدرسة تجربة الحضور" })).data;
 const A = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id;
 writeFileSync(STATE, JSON.stringify({ org, schools: [A], users, pw, emails: {} }));
-const ins = async (tb: string, v: any) => { const r = await owner.c.from(tb).insert({ ...v, school_id: A }).select().single(); if (r.error) throw new Error(tb + " " + r.error.message); return r.data; };
+const ins = async (tb: string, v: any) => { const r = await acadClient(tb, tb === "teachers" ? admin : owner.c, owner.c).from(tb).insert(await acadRow(owner.c, tb, { ...v, school_id: A })).select().single(); if (r.error) throw new Error(tb + " " + r.error.message); return r.data; };
 const year = await ins("academic_years", { name: "1448", start_date: "2026-01-01", end_date: "2027-12-31", is_current: true });
 const stage = await ins("stages", { name: "متوسط" }); const grade = await ins("grades", { name: "الأول", stage_id: stage.id });
 const sec1 = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });

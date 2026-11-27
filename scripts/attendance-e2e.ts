@@ -24,6 +24,14 @@ async function user(tag: string) {
 const riyadhNow = () => new Date(Date.now() + 3 * 3600e3);
 const today = () => riyadhNow().toISOString().slice(0, 10);
 const hhmm = (offMin: number) => { const d = new Date(riyadhNow().getTime() + offMin * 60e3); return d.toISOString().slice(11, 16); };
+// The school day must stay inside today's Riyadh date: "30 minutes ago" just after midnight would wrap to yesterday
+// (start after now → not late) and "+5 min" just before midnight would wrap to tomorrow. So the look-back is capped by
+// the minutes since midnight, grace shrinks with it, and the run waits out the last/first few minutes of the day.
+const minsToday = () => { const d = riyadhNow(); return d.getUTCHours() * 60 + d.getUTCMinutes(); };
+{ const m = minsToday(); if (m >= 1435 || m < 2) { const waitMs = ((1442 - m) % 1440) * 60e3 - (riyadhNow().getUTCSeconds() * 1e3); console.log(`waiting ${Math.ceil(waitMs / 1000)}s for 00:02 Riyadh`); await new Promise((r) => setTimeout(r, Math.max(0, waitMs))); } }
+const back = () => Math.min(30, minsToday() - 1);
+const graceFor = (b: number) => Math.min(10, Math.max(0, b - 2));
+const ahead = (offMin: number) => { const v = hhmm(offMin); return v < hhmm(0) ? "23:59" : v; };
 const orgs: string[] = [];
 try {
   const owner = await user("owner"), vp = await user("vp"), sec = await user("security"), gu = await user("guardian"), gu2 = await user("guardian2"), co = await user("counselor"), te = await user("teacher"), stu = await user("student"), owner2 = await user("owner2");
@@ -75,7 +83,7 @@ try {
   await admin.from("attendance_policies").update({ late_from: "grace_end" }).eq("id", pol.data);
   const p3 = await prev("07:11:00");
   check("late_from=grace_end counts 1 min", p3?.late_minutes === 1, p3);
-  await admin.from("attendance_policies").update({ day_start: hhmm(-30), late_from: "day_start" }).eq("id", pol.data);
+  const B1 = back(); await admin.from("attendance_policies").update({ day_start: hhmm(-B1), grace_minutes: graceFor(B1), late_from: "day_start" }).eq("id", pol.data);
 
   // ---- cards + scan ----
   const card1 = (await owner.c.rpc("issue_student_card", { _student: s1.id })).data;
@@ -84,7 +92,7 @@ try {
   const gScan = await gu.c.rpc("scan_attendance", { _school: A, _token: tok1 });
   check("guardian cannot scan", !!gScan.error);
   const sc1 = (await sec.c.rpc("scan_attendance", { _school: A, _token: tok1 })).data;
-  check("first scan records late (start was 30 min ago)", sc1?.result === "late" && sc1?.late_minutes >= 29, sc1);
+  check(`first scan records late (start was ${B1} min ago)`, sc1?.result === "late" && sc1?.late_minutes >= B1 - 1, sc1);
   const sc2 = (await sec.c.rpc("scan_attendance", { _school: A, _token: tok1 })).data;
   check("duplicate scan → already recorded", sc2?.result === "duplicate", sc2);
   const ins1 = (await admin.from("gate_movements").select("id").eq("student_id", s1.id)).data ?? [];
@@ -108,7 +116,7 @@ try {
   const crossRead = (await owner2.c.from("attendance_days").select("id").eq("school_id", A)).data ?? [];
   check("other org cannot read attendance", crossRead.length === 0);
   // present case
-  await admin.from("attendance_policies").update({ day_start: hhmm(5) }).eq("id", pol.data);
+  await admin.from("attendance_policies").update({ day_start: ahead(5) }).eq("id", pol.data);
   const c2 = (await owner.c.rpc("issue_student_card", { _student: s2.id })).data;
   const t2 = (await owner.c.from("student_cards").select("token").eq("id", c2).single()).data!.token;
   const scP = (await sec.c.rpc("scan_attendance", { _school: A, _token: t2 })).data;
@@ -121,7 +129,7 @@ try {
   const t3 = (await owner.c.from("student_cards").select("token").eq("id", card3).single()).data!.token;
   const h = (await sec.c.rpc("scan_attendance", { _school: A, _token: t3 })).data;
   check("holiday → scan rejected", !hol.error && h?.result === "rejected" && /ليس يوم دراسة/.test(h?.message), h);
-  await admin.from("attendance_policies").update({ holidays: [], day_start: hhmm(-30), absence_review_at: "00:00" }).eq("id", pol.data);
+  await admin.from("attendance_policies").update({ holidays: [], day_start: hhmm(-back()), grace_minutes: graceFor(back()), absence_review_at: "00:00" }).eq("id", pol.data);
 
   // ---- absence review → late arrival; manual; correction keeps history ----
   // expected list comes from the enrollment valid on the date

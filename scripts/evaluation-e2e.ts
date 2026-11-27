@@ -4,6 +4,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -32,7 +33,7 @@ try {
   const SX = (await out.c.from("schools").select("id").eq("org_id", org2).single()).data!.id; tr.addSchool(SX);
   for (const [u, r] of [[pr, "principal"], [sup, "supervisor"], [vice, "vice_principal"], [vice, "supervisor"], [t1, "teacher"], [t2, "teacher"], [sa, "student_affairs"], [g, "guardian"], [g2, "guardian"]] as const)
     await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role: r });
-  const ins = async (t: string, v: any) => { const r = await admin.from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data as any; };
+  const ins = async (t: string, v: any) => { const r = await acadClient(t, admin, owner.c).from(t).insert(await acadRow(owner.c, t, { ...v, school_id: S })).select().single(); if (r.error) console.log(t, r.error); return r.data as any; };
   const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
   const stage = await ins("stages", { name: "ثانوي" }); const grade = await ins("grades", { name: "أول", stage_id: stage.id });
   const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });

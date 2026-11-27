@@ -6,6 +6,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadRow } from "./lib/academic-fixture";
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "fmx");
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
@@ -42,10 +43,10 @@ try {
   const mem = (u: string, s: string, role: string) => ({ user_id: users[u], org_id: org, school_id: s, role });
   must(await admin.from("memberships").insert([mem("p1", S[0]!, "principal"), mem("g1", S[0]!, "guardian"), mem("g1", S[1]!, "guardian"), mem("g2", S[0]!, "guardian"), mem("s1", S[0]!, "student")]));
   // academic data in S1 so the child's timetable/classroom resolve
-  const y = must(await admin.from("academic_years").insert({ school_id: S[0], name: "1448", start_date: "2026-08-01", end_date: "2027-06-30" }).select("id").single())!.id;
-  const st = must(await admin.from("stages").insert({ school_id: S[0], name: "ابتدائي" }).select("id").single())!.id;
-  const gr = must(await admin.from("grades").insert({ school_id: S[0], stage_id: st, name: "الرابع" }).select("id").single())!.id;
-  const sec = must(await admin.from("sections").insert({ school_id: S[0], grade_id: gr, year_id: y, name: "أ" }).select("id").single())!.id;
+  const y = must(await oc.from("academic_years").insert(await acadRow(oc, "academic_years", { school_id: S[0], name: "1448", start_date: "2026-08-01", end_date: "2027-06-30" })).select("id").single())!.id;
+  const st = must(await oc.from("stages").insert(await acadRow(oc, "stages", { school_id: S[0], name: "ابتدائي" })).select("id").single())!.id;
+  const gr = must(await oc.from("grades").insert(await acadRow(oc, "grades", { school_id: S[0], stage_id: st, name: "الرابع" })).select("id").single())!.id;
+  const sec = must(await oc.from("sections").insert(await acadRow(oc, "sections", { school_id: S[0], grade_id: gr, year_id: y, name: "أ" })).select("id").single())!.id;
   const sj = must(await admin.from("subjects").insert({ school_id: S[0], name: "الرياضيات" }).select("id").single())!.id;
   const co = must(await admin.from("courses").insert({ school_id: S[0], year_id: y, subject_id: sj, section_id: sec, weekly_periods: 1 }).select("id").single())!.id;
   const te = must(await admin.from("teachers").insert({ school_id: S[0], full_name: "معلم الرياضيات" }).select("id").single())!.id;
@@ -74,7 +75,7 @@ try {
   const unv = list.find((x) => x.student_id === k4);
   check("unverified link listed without name or details", !!unv && unv.student === null && unv.csmart_no === null);
   const c1 = list.find((x) => x.student_id === k1);
-  check("child card has school, grade, section, C-Smart number", c1?.school === "مدرسة الأسرة الأولى" && c1?.grade === "الرابع" && c1?.section === "أ" && c1?.csmart_no === "CS-" + run, c1);
+  check("child card has school, grade, section, C-Smart number", c1?.school === "مدرسة الأسرة الأولى" && c1?.grade === "رابع" && c1?.section === "أ" && c1?.csmart_no === "CS-" + run, c1);
   const o1 = must(await G1.rpc("family_child", { _student: k1 })) as any;
   check("child overview: timetable from published schedule", o1.timetable.length === 1 && o1.timetable[0].subject === "الرياضيات");
   check("child overview: digital classroom of the section", o1.classrooms.some((c: any) => c.id === room));

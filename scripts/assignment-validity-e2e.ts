@@ -4,6 +4,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -27,7 +28,7 @@ try {
   const owner = await user("owner"), t = await user("teacher"), dhUser = await user("dh");
   org = (await owner.c.rpc("create_organization", { _org_name: "مؤسسة السريان", _school_name: "فرع س" })).data;
   const A = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(A);
-  const ins = async (tb: string, v: any) => { const r = await owner.c.from(tb).insert({ ...v, school_id: A }).select().single(); if (r.error) throw new Error(tb + " " + r.error.message); return r.data; };
+  const ins = async (tb: string, v: any) => { const r = await acadClient(tb, tb === "teachers" ? admin : owner.c, owner.c).from(tb).insert(await acadRow(owner.c, tb, { ...v, school_id: A })).select().single(); if (r.error) throw new Error(tb + " " + r.error.message); return r.data; };
   const year = await ins("academic_years", { name: "1448", start_date: riyadh(-60), end_date: riyadh(200), is_current: true });
   const stage = await ins("stages", { name: "متوسط" });
   const grade = await ins("grades", { name: "أول", stage_id: stage.id });
@@ -35,7 +36,7 @@ try {
   const dep = await ins("departments", { name: "العلوم" });
   const mk = async (n: string) => ins("courses", { year_id: year.id, subject_id: (await ins("subjects", { name: n, department_id: dep.id })).id, section_id: sec.id });
   const cLive = await mk("علوم"), cOther = await mk("فيزياء");
-  const te = await ins("teachers", { full_name: "معلم السريان", email: t.email, department_id: dep.id });
+  const teR = await admin.from("teachers").insert({ school_id: A, full_name: "معلم السريان", email: t.email, department_id: dep.id }).select().single(); if (teR.error) throw new Error("teachers " + teR.error.message); const te = teR.data as any;
   await owner.c.rpc("invite_member", { _email: t.email, _school: A, _role: "teacher" }); await t.c.rpc("accept_my_invitations");
   const assign = async (course: string) => { const a = await ins("teacher_assignments", { course_id: course, teacher_id: te.id }); const d = await owner.c.rpc("decide_assignment", { _id: a.id, _approve: true }); if (d.error) throw d.error; return a.id as string; };
   const aLive = await assign(cLive.id), aOther = await assign(cOther.id);

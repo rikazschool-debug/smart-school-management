@@ -2,6 +2,7 @@
 // No cleanup, real messages, retries or new Auth accounts; fixture logins get a fresh random password each run. Stop on the first request failure.
 import { createClient } from "@supabase/supabase-js";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const url = env["VITE_SUPABASE_URL"], key = env["VITE_SUPABASE_PUBLISHABLE_KEY"], service = process.env["SUPABASE_SERVICE_ROLE_KEY"];
 if (!url?.includes("czoaudsfbinpkwqsmhrd") || !key || !service) throw Error("Test DB configuration required");
@@ -31,7 +32,7 @@ for (const [who, role] of [["pr", "principal"], ["sup2", "supervisor"], ["t1", "
   if (!who || !role) throw Error("fixture membership");
   must(await admin.from("memberships").insert({ user_id: getUser(who).id, org_id: org, school_id: school, role }), "new synthetic membership");
 }
-const ins = async (table: string, data: object) => must(await owner.from(table).insert({ ...data, school_id: school }).select().single(), table);
+const ins = async (table: string, data: object) => must(await acadClient(table, owner, owner).from(table).insert(await acadRow(owner, table, { ...data, school_id: school })).select().single(), table);
 const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
 const term = await ins("terms", { name: "الأول", year_id: year.id, start_date: "2026-08-20", end_date: "2027-01-10" });
 const stage = await ins("stages", { name: "المتوسطة" }); const grade = await ins("grades", { name: "ثاني", stage_id: stage.id });

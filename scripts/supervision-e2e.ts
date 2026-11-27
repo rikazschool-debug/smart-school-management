@@ -4,6 +4,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -47,7 +48,7 @@ async function main() {
   must(await x.c.rpc("create_organization", { _org_name: `مؤسسة أخرى ${run}`, _school_name: "فرع آخر" }), "org2");
   const A = must(await owner.c.from("schools").select("id").eq("org_id", org).single(), "school")!.id as string;
   const B = (must(await admin.from("schools").insert({ org_id: org, name: "الفرع ب" }).select().single(), "schoolB") as any).id as string;
-  const ins = async (S: string, t: string, v: any) => must(await (["teachers"].includes(t) ? admin : owner.c).from(t).insert({ ...v, school_id: S }).select().single(), t) as any;
+  const ins = async (S: string, t: string, v: any) => must(await acadClient(t, (["teachers"].includes(t) ? admin : owner.c), owner.c).from(t).insert(await acadRow(owner.c, t, { ...v, school_id: S })).select().single(), t) as any;
   const mk = async (S: string) => {
     const year = await ins(S, "academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
     const term = await ins(S, "terms", { year_id: year.id, name: "الأول", start_date: "2026-08-20", end_date: "2027-01-10" });
@@ -80,16 +81,17 @@ async function main() {
   // delegation lets the principal assign in her own branch only
   const dg = await owner.c.rpc("sv_deleg_save", { _p: { org_id: org, school_id: A, delegate_id: pr.id, kind: "assign", starts_at: iso(-10), ends_at: iso(3600), reason: "تفويض إسناد الفرع أ" } }); check("owner delegates assignment to principal A", !dg.error, dg.error);
   const dgB = await owner.c.rpc("sv_deleg_save", { _p: { org_id: org, school_id: B, delegate_id: pr.id, kind: "assign", starts_at: iso(-10), ends_at: iso(3600), reason: "خارج الفرع" } }); check("assign delegation to a non-principal of B refused", err(dgB, /لمدير الفرع/), dgB.error);
-  const dgSelf = await pr.c.rpc("sv_deleg_save", { _p: { org_id: org, school_id: A, delegate_id: dlg.id, kind: "approve", starts_at: iso(-10), ends_at: iso(3600), reason: "محاولة" } }); check("principal cannot grant delegations", err(dgSelf, /مالك/), dgSelf.error);
+  const dgSelf = await pr.c.rpc("sv_deleg_save", { _p: { org_id: org, school_id: A, delegate_id: dlg.id, kind: "approve", starts_at: iso(-10), ends_at: iso(3600), reason: "محاولة" } }); check("principal cannot grant delegations", err(dgSelf, /مالك|مدير النظام/), dgSelf.error);
   const prAsg = await pr.c.rpc("sv_asg_save", { _id: null, _rev: null, _p: P({ supervisor_id: sup2.id, teacher_ids: [te2.id], course_ids: [course2.id], subject_ids: [] }) }); check("delegated principal assigns supervisor 2", !prAsg.error, prAsg.error);
   const prB2 = await pr.c.rpc("sv_asg_save", { _id: null, _rev: null, _p: P({ school_id: B, teacher_ids: [teB.id], course_ids: [], subject_ids: [] }) }); check("delegated principal cannot assign in branch B", err(prB2, /صلاحية/), prB2.error);
 
   // ---- 2b. base templates are view-only until the owner adopts them ----
   const preAdopt = await sup.c.rpc("sv_rec_save", { _id: null, _rev: null, _p: { school_id: A, form_key: "support_visit", teacher_id: te1.id, data: {} } }); check("base template unusable before owner adoption (server)", err(preAdopt, /منشور/), preAdopt.error);
   const tpl = must(await owner.c.rpc("sv_form_list", { _org: org }), "tpl") as any[];
-  check("templates flagged view-only", tpl.filter((f) => f.is_template && !f.usable).length === 17, tpl.length);
+  // the platform template catalogue grows over time: every template must be view-only (at least the original 17)
+  check("templates flagged view-only", tpl.filter((f) => f.is_template).length >= 17 && tpl.filter((f) => f.is_template).every((f) => !f.usable), tpl.length);
   const vb = tpl.find((f) => f.key === "support_visit");
-  const prAdopt = await pr.c.rpc("sv_form_adopt", { _org: org, _template: vb.id }); check("principal cannot adopt a template", err(prAdopt, /مالك/), prAdopt.error);
+  const prAdopt = await pr.c.rpc("sv_form_adopt", { _org: org, _template: vb.id }); check("principal cannot adopt a template", err(prAdopt, /مالك|مدير النظام/), prAdopt.error);
   for (const k of ["support_visit", "work_review", "program", "minutes", "pd_need", "teacher_ack"]) { const t = tpl.find((f) => f.key === k); const a = await owner.c.rpc("sv_form_adopt", { _org: org, _template: t.id }); check("owner adopts " + k, !a.error, a.error); }
   const twice = await owner.c.rpc("sv_form_adopt", { _org: org, _template: vb.id }); check("adopting twice refused", err(twice, /إصدار معتمد/), twice.error);
   const ad = (must(await owner.c.rpc("sv_form_list", { _org: org }), "ad") as any[]).find((f) => f.key === "support_visit" && f.org_id === org);

@@ -5,6 +5,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -30,7 +31,7 @@ try {
   const S = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id; tr.addSchool(S);
   const org2 = (await owner2.c.rpc("create_organization", { _org_name: "مؤسسة أخرى", _school_name: "فرع آخر" })).data; orgs.push(org2);
   const S2 = (await owner2.c.from("schools").select("id").eq("org_id", org2).single()).data!.id; tr.addSchool(S2);
-  const ins = async (t: string, v: any) => { const r = await (t === "teachers" ? admin : owner.c).from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data; };
+  const ins = async (t: string, v: any) => { const r = await acadClient(t, (t === "teachers" ? admin : owner.c), owner.c).from(t).insert(await acadRow(owner.c, t, { ...v, school_id: S })).select().single(); if (r.error) console.log(t, r.error); return r.data; };
   const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
   const stage = await ins("stages", { name: "متوسط" }); const grade = await ins("grades", { name: "أول متوسط", stage_id: stage.id });
   const secA = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });
@@ -60,7 +61,7 @@ try {
   const groups = async (u: any) => ((await u.c.rpc("my_section_groups", { _school: S })).data ?? []) as any[];
   const g = await admin.from("conversations").select("id,section_id,group_type,title").eq("school_id", S).eq("kind", "group");
   check("1 one section group per section (2), no subject or general groups", g.data?.filter((x) => x.group_type === "class").length === 2 && !g.data?.some((x) => x.group_type === "course" || x.group_type === "section"), g.data);
-  check("2 title grade — section — year — school", g.data?.some((x) => x.title.startsWith("أول متوسط — شعبة أ —")), g.data?.map((x) => x.title));
+  check("2 title grade — section — year — school", g.data?.some((x) => x.title.startsWith("أول — شعبة أ —")), g.data?.map((x) => x.title));
   const t1g = await groups(t1);
   check("3 teacher of math in two sections sees two separate groups", t1g.length === 2, t1g);
   const s1g = await groups(s1);
@@ -98,7 +99,9 @@ try {
   check("24 teacher cannot start a private chat with a student", !!(await t1.c.rpc("start_student_conversation", { _student: st1.id })).error);
   // circulars
   const cid = (await pr.c.rpc("save_circular", { _id: null, _school: S, _title: "تعميم إداري", _body: "نص", _publisher: null, _priority: "normal", _requires_ack: false, _ack_due: null, _aud: { roles: ["student", "guardian", "teacher"] } })).data;
-  const pub = await pr.c.rpc("publish_circular", { _id: cid });
+  // publishing goes through the preview fingerprint (prompt-503): preview → publish_circular_checked(fp)
+  const fp = ((await pr.c.rpc("circular_draft_preview", { _id: cid })).data as any)?.fp;
+  const pub = await pr.c.rpc("publish_circular_checked", { _id: cid, _fp: fp });
   check("27 circular published to guardians/teachers", !pub.error && pub.data === 3, pub);
   check("28 student never receives administrative circular", ((await s1.c.from("circulars").select("id").eq("id", cid)).data ?? []).length === 0);
   check("29 guardian reads targeted circular", ((await g1.c.from("circulars").select("id").eq("id", cid)).data ?? []).length === 1);

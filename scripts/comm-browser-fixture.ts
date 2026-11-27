@@ -6,6 +6,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -49,7 +50,7 @@ async function setup() {
   const { data: orgId, error: oe } = await owner.c.rpc("create_organization", { _org_name: "مؤسسة رحلات التواصل", _school_name: "مدرسة رحلات التواصل" });
   if (oe) throw oe;
   const S = (await owner.c.from("schools").select("id").eq("org_id", orgId).single()).data!.id;
-  const ins = async (t: string, v: any) => { const r = await (["teachers", "guardians", "students"].includes(t) ? admin : owner.c).from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) throw new Error(t + ": " + r.error.message); return r.data; };
+  const ins = async (t: string, v: any) => { const r = await acadClient(t, (["teachers", "guardians", "students"].includes(t) ? admin : owner.c), owner.c).from(t).insert(await acadRow(owner.c, t, { ...v, school_id: S })).select().single(); if (r.error) throw new Error(t + ": " + r.error.message); return r.data; };
   const join = async (u: { c: any; email: string }, role: string) => { const a = await owner.c.rpc("invite_member", { _email: u.email, _school: S, _role: role }); if (a.error) throw a.error; await u.c.rpc("accept_my_invitations"); };
   const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
   const stage = await ins("stages", { name: "متوسط" });

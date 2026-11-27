@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import * as XLSX from "xlsx";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -46,7 +47,7 @@ async function setup() {
   const owner = await user("owner", "مالك الدرجات"), te = await user("te", "أ. نورة المعلمة"), dh = await user("dh", "رئيس قسم الرياضيات"), pr = await user("pr", "مدير المدرسة"), gu = await user("gu", "أبو سعد"), stu = await user("stu", "سعد الطالب");
   const org = must(await owner.c.rpc("create_organization", { _org_name: `مؤسسة اختبار الدرجات ${run}`, _school_name: "فرع الدرجات" }), "org") as string;
   const S = must(await owner.c.from("schools").select("id").eq("org_id", org).single(), "school")!.id;
-  const ins = async (t: string, v: any) => must(await owner.c.from(t).insert({ ...v, school_id: S }).select().single(), t) as any;
+  const ins = async (t: string, v: any) => must(await acadClient(t, t === "teachers" ? admin : owner.c, owner.c).from(t).insert(await acadRow(owner.c, t, { ...v, school_id: S })).select().single(), t) as any;
   const year = await ins("academic_years", { name: "1448", start_date: "2026-01-01", end_date: "2027-12-31", is_current: true });
   const term = await ins("terms", { name: "الأول", year_id: year.id });
   const stage = await ins("stages", { name: "متوسط" }); const grade = await ins("grades", { name: "الثاني", stage_id: stage.id });

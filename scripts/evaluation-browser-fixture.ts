@@ -3,6 +3,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const admin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const tr = new TestRun(admin, "evb");
 const FX = "/tmp/browser/ev/fixture.json";
@@ -29,7 +30,7 @@ const orgId = (await oc.rpc("create_organization", { _org_name: "مؤسسة تج
 const o = { id: orgId };
 const S = (await admin.from("schools").select("id").eq("org_id", orgId).single()).data!.id; tr.addSchool(S);
 for (const [u, r] of [["pr", "principal"], ["vice", "vice_principal"], ["t1", "teacher"], ["g", "guardian"]]) await admin.from("memberships").insert({ user_id: users[u]!.id, org_id: o!.id, school_id: S, role: r });
-const ins = async (t: string, v: any) => { const r = await admin.from(t).insert({ ...v, school_id: S }).select().single(); if (r.error) console.log(t, r.error); return r.data as any; };
+const ins = async (t: string, v: any) => { const r = await acadClient(t, admin, oc).from(t).insert(await acadRow(oc, t, { ...v, school_id: S })).select().single(); if (r.error) console.log(t, r.error); return r.data as any; };
 const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
 const stage = await ins("stages", { name: "ثانوي" }); const grade = await ins("grades", { name: "أول", stage_id: stage.id });
 const sec = await ins("sections", { name: "أ", grade_id: grade.id, year_id: year.id, capacity: 30 });

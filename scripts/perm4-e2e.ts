@@ -5,6 +5,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -30,10 +31,10 @@ try {
   const { data: org } = await owner.c.rpc("create_organization", { _org_name: "مؤسسة الصلاحيات", _school_name: "فرع أ" }); orgs.push(org);
   const { data: org2 } = await owner2.c.rpc("create_organization", { _org_name: "مؤسسة ثانية", _school_name: "فرع خ" }); orgs.push(org2);
   const A = (await owner.c.from("schools").select("id").eq("org_id", org).single()).data!.id;
-  const B = (await owner.c.from("schools").insert({ org_id: org, name: "فرع ب" }).select("id").single()).data!.id;
+  const B = (await admin.from("schools").insert({ org_id: org, name: "فرع ب" }).select("id").single()).data!.id; // branches are created by the owner via org_school_save in the app; fixture uses the service role
   const X = (await owner2.c.from("schools").select("id").eq("org_id", org2).single()).data!.id;
   [A, B, X].forEach((s) => tr.addSchool(s));
-  const ins = async (t: string, v: any, s = A) => { const r = await owner.c.from(t).insert({ ...v, school_id: s }).select().single(); if (r.error) console.log(t, r.error); return r.data; };
+  const ins = async (t: string, v: any, s = A) => { const r = await acadClient(t, t === "teachers" ? admin : owner.c, owner.c).from(t).insert(await acadRow(owner.c, t, { ...v, school_id: s })).select().single(); if (r.error) console.log(t, r.error); return r.data; };
   const year = await ins("academic_years", { name: "1447", start_date: "2026-08-20", end_date: "2027-06-10", is_current: true });
   const stage = await ins("stages", { name: "متوسط" });
   const grade = await ins("grades", { name: "أول", stage_id: stage.id });

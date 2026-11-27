@@ -4,6 +4,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -37,7 +38,7 @@ try {
   for (const [u, r] of [[pr, "principal"], [mpr, "principal"], [vp, "vice_principal"], [dh, "dept_head"], [nurse, "nurse"], ...t.map((x) => [x, "teacher"])] as any[])
     await admin.from("memberships").insert({ user_id: u.id, org_id: org, school_id: S, role: r });
   await admin.from("memberships").insert({ user_id: prB.id, org_id: orgB, school_id: SB, role: "principal" });
-  const ins = async (tb: string, v: any) => { const r = await admin.from(tb).insert({ school_id: S, ...v }).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
+  const ins = async (tb: string, v: any) => { const r = await acadClient(tb, admin, owner.c).from(tb).insert(await acadRow(owner.c, tb, { school_id: S, ...v })).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
   await ins("school_day_settings", { study_days: [0, 1, 2, 3, 4, 5, 6] });
   const P1 = await ins("periods", { sort_order: 1, name: "الأولى", start_time: "07:00", end_time: "07:45" });
   const P2 = await ins("periods", { sort_order: 2, name: "الثانية", start_time: "09:30", end_time: "10:00" });

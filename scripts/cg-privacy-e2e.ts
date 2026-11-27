@@ -6,6 +6,7 @@ import "./lib/user-pool.ts";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { TestRun } from "./lib/test-run";
+import { acadClient, acadRow } from "./lib/academic-fixture";
 const env = Object.fromEntries(readFileSync("/dev-server/.env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")]; }));
 const URL = env.VITE_SUPABASE_URL, PK = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const shim = (key: string) => (input: any, init: any = {}) => { const h = new Headers(init.headers); if (h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization"); h.set("apikey", key); return fetch(input, { ...init, headers: h }); };
@@ -46,7 +47,7 @@ async function main() {
   const S2r = await owner.c.rpc("org_school_save", { _org: org, _id: null, _name: "مدرسة أخرى" } as any);
   const S2 = (await owner.c.from("schools").select("id").eq("org_id", org).neq("id", S).maybeSingle()).data?.id;
   if (S2) { await owner.c.rpc("invite_member", { _email: other.email, _school: S2, _role: "principal" }); await other.c.rpc("accept_my_invitations"); }
-  const ins = async (tb: string, v: any) => { const r = await admin.from(tb).insert({ school_id: S, ...v }).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
+  const ins = async (tb: string, v: any) => { const r = await acadClient(tb, admin, owner.c).from(tb).insert(await acadRow(owner.c, tb, { school_id: S, ...v })).select().single(); if (r.error) throw new Error(tb + ": " + r.error.message); return r.data as any; };
   const year = await ins("academic_years", { name: "1448", start_date: "2026-08-20", end_date: "2027-06-20", is_current: true });
   const stage = await ins("stages", { name: "متوسط" }); const grade = await ins("grades", { name: "أول متوسط", stage_id: stage.id });
   const subA = await ins("subjects", { name: "علوم" }), subB = await ins("subjects", { name: "رياضيات" });
