@@ -72,6 +72,10 @@ async function rpc(fn: string, args: Record<string, any> = {}) {
   if (r.error && Object.values(args).some(Array.isArray) && /does not exist|invalid input syntax|malformed/.test(r.error.message)) r = await sql(`select coalesce(jsonb_agg(to_jsonb(t)),'[]'::jsonb) r from (select * from public.${id(fn)}(${mk(false)})) t`);
   if (r.error) return { data: null, error: { message: r.error.message, code: /duplicate key/.test(r.error.message) ? "23505" : "sql" } };
   const rows: any[] = r.rows![0].r;
+  if (rows.length >= 1 && rows.every((x) => Object.keys(x).length === 1 && fn in x)) {
+    const ps = await sql(`select bool_or(proretset) s from pg_proc where proname=${lit(fn)} and pronamespace='public'::regnamespace`);
+    if (ps.rows?.[0]?.s) return { data: rows.map((x) => x[fn]), error: null }; // set-returning function: always a list, even for one row
+  }
   if (rows.length === 1 && Object.keys(rows[0]).length === 1 && fn in rows[0]) return { data: rows[0][fn] === "" ? null : rows[0][fn], error: null };
   return { data: rows, error: null };
 }
