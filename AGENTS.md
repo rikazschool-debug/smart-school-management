@@ -63,3 +63,4 @@
 - Integrations (api_*): src/components/integrations/AGENTS.md.
 - Automation center (au_*): Postgres engine only, registries are the single source, rules start inactive, no cron per rule; full rules in src/components/automation/AGENTS.md (read before changing au_*).
 - Automation channels reuse the existing WATI sender with a platform switch plus an environment gate; private report files render through the shared server worker and retain report RLS, so retries and downloads cannot bypass engine authority.
+- Internal SECURITY DEFINER helpers (_name) that no policy/view/invoker function uses get EXECUTE only for service_role; review with the linter before granting authenticated. Why: limits direct RPC calls to internal checks.
