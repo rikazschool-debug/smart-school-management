@@ -4075,6 +4075,8 @@ export type Database = {
           submit_fp: string | null
           submitted_at: string | null
           submitted_by: string | null
+          template_id: string | null
+          template_version: number | null
           updated_at: string
         }
         Insert: {
@@ -4108,6 +4110,8 @@ export type Database = {
           submit_fp?: string | null
           submitted_at?: string | null
           submitted_by?: string | null
+          template_id?: string | null
+          template_version?: number | null
           updated_at?: string
         }
         Update: {
@@ -4141,6 +4145,8 @@ export type Database = {
           submit_fp?: string | null
           submitted_at?: string | null
           submitted_by?: string | null
+          template_id?: string | null
+          template_version?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -4156,6 +4162,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "au_rules_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "au_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -4508,6 +4521,128 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      au_template_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          def: Json
+          id: string
+          note: string | null
+          params: Json
+          template_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          def: Json
+          id?: string
+          note?: string | null
+          params: Json
+          template_id: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          def?: Json
+          id?: string
+          note?: string | null
+          params?: Json
+          template_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_template_versions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "au_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      au_templates: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          created_by: string | null
+          def: Json
+          description: string
+          event_code: string
+          goal: string | null
+          id: string
+          layout: Json | null
+          name: string
+          org_id: string | null
+          params: Json
+          risk: string
+          section: string
+          source_rule: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string
+          created_by?: string | null
+          def: Json
+          description: string
+          event_code: string
+          goal?: string | null
+          id?: string
+          layout?: Json | null
+          name: string
+          org_id?: string | null
+          params?: Json
+          risk?: string
+          section: string
+          source_rule?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          def?: Json
+          description?: string
+          event_code?: string
+          goal?: string | null
+          id?: string
+          layout?: Json | null
+          name?: string
+          org_id?: string | null
+          params?: Json
+          risk?: string
+          section?: string
+          source_rule?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "au_templates_event_code_fkey"
+            columns: ["event_code"]
+            isOneToOne: false
+            referencedRelation: "au_events"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "au_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       au_trace: {
         Row: {
@@ -27542,6 +27677,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      _au_reader: { Args: never; Returns: boolean }
       _au_rec_codes: {
         Args: { _ev: Database["public"]["Tables"]["au_events"]["Row"] }
         Returns: string[]
@@ -27679,6 +27815,26 @@ export type Database = {
       }
       _au_teachers: { Args: { _section: string }; Returns: string[] }
       _au_tick_core: { Args: { _budget_ms?: number }; Returns: Json }
+      _au_tpl_check: { Args: { _def: Json; _event: string }; Returns: string }
+      _au_tpl_defaults: { Args: { _org: string; _params: Json }; Returns: Json }
+      _au_tpl_fill: {
+        Args: { _def: Json; _params: Json; _vals: Json }
+        Returns: Json
+      }
+      _au_tpl_problem: {
+        Args: {
+          _org: string
+          t: Database["public"]["Tables"]["au_templates"]["Row"]
+        }
+        Returns: string
+      }
+      _au_tpl_vis: {
+        Args: {
+          _org: string
+          t: Database["public"]["Tables"]["au_templates"]["Row"]
+        }
+        Returns: boolean
+      }
       _au_tr: {
         Args: {
           _outcome: string
@@ -31736,6 +31892,33 @@ export type Database = {
         Returns: Json
       }
       au_status: { Args: { _org: string }; Returns: Json }
+      au_tpl_list: { Args: { _org: string }; Returns: Json }
+      au_tpl_save: {
+        Args: {
+          _category: string
+          _description: string
+          _id: string
+          _name: string
+          _note: string
+          _org: string
+          _rule: string
+        }
+        Returns: string
+      }
+      au_tpl_set_status: {
+        Args: { _id: string; _status: string }
+        Returns: undefined
+      }
+      au_tpl_use: {
+        Args: {
+          _id: string
+          _name: string
+          _org: string
+          _schools: string[]
+          _vals: Json
+        }
+        Returns: string
+      }
       au_validate: {
         Args: { _def: Json; _event: string; _org: string }
         Returns: Json

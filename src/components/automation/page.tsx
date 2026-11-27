@@ -2,11 +2,12 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Zap, SlidersHorizontal, Play, Clock, Activity, Settings2, ListTree, PencilRuler, FlaskConical, OctagonAlert, CalendarClock, ScrollText, ShieldAlert, ClipboardCheck, UserCog, MessageSquareText, BookOpenText, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Zap, SlidersHorizontal, Play, Clock, Activity, Settings2, ListTree, PencilRuler, FlaskConical, OctagonAlert, CalendarClock, ScrollText, ShieldAlert, ClipboardCheck, UserCog, MessageSquareText, BookOpenText, LibraryBig, type LucideIcon } from "lucide-react";
 import { AutomationNav } from "./navigation";
 import { ChannelsTab } from "./channels-tab";
 import { ApprovalsTab } from "./approvals";
 import { AccessTab } from "./access";
+import { TemplatesTab } from "./templates";
 import { can, rpc as auRpc, type AuMe } from "./lib";
 import { ask, askText } from "@/components/confirm";
 import { Dashboard } from "./dashboard";
@@ -19,11 +20,11 @@ import { ErrorState, ForbiddenState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 import { selectCls } from "@/components/ui/native-select";
 
-export type AuTab = "overview" | "rules" | "designer" | "approvals" | "events" | "conditions" | "actions" | "schedule" | "simulate" | "monitor" | "failed" | "existing" | "audit" | "channels" | "access" | "settings";
+export type AuTab = "overview" | "rules" | "designer" | "approvals" | "events" | "conditions" | "actions" | "schedule" | "simulate" | "monitor" | "failed" | "existing" | "audit" | "channels" | "access" | "settings" | "templates";
 export type TabDef = { k: AuTab; l: string; i: LucideIcon };
-/** Grouped so the working tabs stay scannable. The templates library (phase 7) is not shown until it exists. */
+/** Grouped so the working tabs stay scannable. */
 export const AU_GROUPS: { l: string; d: string; i: LucideIcon; tabs: TabDef[] }[] = [
-  { l: "الإدارة", d: "القواعد والاعتماد", i: LayoutDashboard, tabs: [{ k: "overview", i: LayoutDashboard, l: "نظرة عامة" }, { k: "rules", i: ListTree, l: "قواعد الأتمتة" }, { k: "designer", i: PencilRuler, l: "المصمم المرئي" }, { k: "approvals", i: ClipboardCheck, l: "المراجعة والاعتماد" }] },
+  { l: "الإدارة", d: "القواعد والاعتماد", i: LayoutDashboard, tabs: [{ k: "overview", i: LayoutDashboard, l: "نظرة عامة" }, { k: "rules", i: ListTree, l: "قواعد الأتمتة" }, { k: "templates", i: LibraryBig, l: "قوالب الأتمتة الجاهزة" }, { k: "designer", i: PencilRuler, l: "المصمم المرئي" }, { k: "approvals", i: ClipboardCheck, l: "المراجعة والاعتماد" }] },
   { l: "الأدلة", d: "الأحداث والشروط", i: BookOpenText, tabs: [{ k: "events", i: Zap, l: "دليل الأحداث" }, { k: "conditions", i: SlidersHorizontal, l: "الشروط والمتغيرات" }, { k: "actions", i: Play, l: "دليل الإجراءات" }, { k: "schedule", i: Clock, l: "الجدولة" }] },
   { l: "التشغيل", d: "التنفيذ والمراقبة", i: Activity, tabs: [{ k: "simulate", i: FlaskConical, l: "المحاكاة والاختبار" }, { k: "monitor", i: Activity, l: "مراقبة التنفيذ" }, { k: "failed", i: OctagonAlert, l: "العمليات الفاشلة" }, { k: "existing", i: CalendarClock, l: "الوظائف القائمة" }, { k: "channels", i: MessageSquareText, l: "القنوات والرسائل" }, { k: "audit", i: ScrollText, l: "سجل التدقيق" }] },
   { l: "الضبط", d: "الوصول والإعدادات", i: Settings2, tabs: [{ k: "access", i: UserCog, l: "الصلاحيات والتفويض" }, { k: "settings", i: Settings2, l: "الإعدادات" }] },
@@ -33,7 +34,7 @@ export const AU_TABS: TabDef[] = AU_GROUPS.flatMap((g) => g.tabs);
 const TAB_PERM: Record<AuTab, string[] | "owner"> = {
   overview: ["au_view.dashboard"], rules: ["au_view.rules"], designer: ["au_manage.designer"], approvals: ["au_control.review", "au_control.approve", "au_control.reject"],
   events: ["au_view.events"], conditions: ["au_view.conditions"], actions: ["au_view.actions"], schedule: ["au_view.schedule"], simulate: ["au_manage.simulate"],
-  monitor: ["au_view.runs"], failed: ["au_view.failed"], existing: ["au_view.jobs"], channels: ["au_view.runs"], audit: ["au_view.audit"], access: "owner", settings: "owner",
+  monitor: ["au_view.runs"], failed: ["au_view.failed"], existing: ["au_view.jobs"], channels: ["au_view.runs"], audit: ["au_view.audit"], access: "owner", settings: "owner", templates: ["au_view.center"],
 };
 export const tabAllowed = (me: AuMe | null | undefined, t: AuTab) => { const p = TAB_PERM[t]; return !!me && (me.owner || (p !== "owner" && p.some((k) => can(me, k)))); };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,6 +77,7 @@ export function AutomationPage({ orgId, tab, rule, me }: { orgId: string; tab: A
       {tab === "overview" && <><Dashboard orgId={orgId} />{q.data && <Overview r={q.data} />}</>}
       {tab === "rules" && <RulesTab orgId={orgId} me={me} openDesigner={(id) => go("designer", id)} />}
       {tab === "designer" && <Designer key={rule ?? "new"} orgId={orgId} ruleId={rule} me={me} onRule={(id) => go("designer", id)} />}
+      {tab === "templates" && <TemplatesTab orgId={orgId} me={me} openDesigner={(id) => go("designer", id)} />}
       {tab === "approvals" && <ApprovalsTab orgId={orgId} openDesigner={(id) => go("designer", id)} />}
       {tab === "access" && <AccessTab orgId={orgId} />}
       {tab === "simulate" && <SimulationTab orgId={orgId} openDesigner={(id) => go("designer", id)} />}

@@ -1,3 +1,15 @@
+# Automation center handover (stages A–G, 7, 8, 9) — test only
+- [x] Verify GitHub/Lovable/test-DB sync (746/746 migrations)
+- [x] Restrict channel/source-table registries to live automation access (phase-6 rule)
+- [x] Phase 7: ready-made templates library (16 templates, group templates with versions) + tests + browser check
+- [x] Phase 8: Sanad automation drafts (registry-only context, engine-validated, never self-saving) + tests
+- [ ] Sanad browser journey (write → save → designer) — not yet run
+- [ ] Sanad: explain existing rules / analyse simulation failures / summarise runs
+- [ ] Templates needing org choices: maintenance request (category), activities, integrations
+- [ ] Phase G: 1458 pre-existing linter findings, load/concurrency/recovery under real execution, 1-min vs 5-min comparison
+- [ ] Phase 9: designer-driven acceptance scenarios 1–6, 8–10; full regression rerun; backup/restore test
+- [ ] Leaked-password protection — blocked: owner turns it on in the Supabase dashboard
+
 # Automation navigation design
 - [x] Improve the grouped automation menu's visual hierarchy, active states and mobile layout without changing routes or permissions
 - [x] Verify desktop/mobile navigation and preview build
