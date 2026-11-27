@@ -7,7 +7,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { toast } from "sonner";
-import { Save, PlayCircle, BadgeCheck, Power, PowerOff, Undo2, Redo2, Copy, LayoutGrid, Maximize2, Minimize2, AlertTriangle, CheckCircle2, X, Loader2, Send } from "lucide-react";
+import { Save, PlayCircle, BadgeCheck, Power, PowerOff, Undo2, Redo2, Copy, LayoutGrid, Maximize2, Minimize2, AlertTriangle, CheckCircle2, X, Loader2, Send, ListOrdered, Workflow, Trash2 } from "lucide-react";
 import { ask } from "@/components/confirm";
 import { ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
@@ -16,6 +16,7 @@ import { autoLayout, compile, decompile, HANDLES, HANDLE_LABEL, ACTION_CODE, typ
 import { KIND, START_TYPES, serverMsg } from "./meta";
 import { RuleSettings, StepProps, eligibleRecipients, type RuleMeta } from "./props";
 import { SimResult } from "./sim";
+import { outline, removeStep } from "./outline";
 
 type ND = { kind: NodeKind; d: Record<string, unknown>; issue?: number; status?: string };
 type FNode = Node<ND, "au">;
@@ -118,6 +119,8 @@ function DesignerInner({ orgId, ruleId, me, onRule }: { orgId: string; ruleId?: 
   const [sim, setSim] = useState<Any>(null);
   const [simBusy, setSimBusy] = useState(false);
   const [full, setFull] = useState(false);
+  /** Same graph, two views: the canvas (advanced) and an ordered step list (simple). */
+  const [view, setView] = useState<"canvas" | "steps">("canvas");
   const hist = useRef<{ past: Snap[]; future: Snap[] }>({ past: [], future: [] });
   const loaded = useRef<string | null>(null);
 
@@ -226,6 +229,13 @@ function DesignerInner({ orgId, ruleId, me, onRule }: { orgId: string; ruleId?: 
     setNodes((ns) => [...ns.map((n) => ({ ...n, selected: false })), ...copies]); setDirty(true);
   };
   const tidy = () => { snap(); const laid = autoLayout(g.nodes, g.edges); setNodes((ns) => ns.map((n) => { const p = laid.find((x) => x.id === n.id); return p ? { ...n, position: { x: p.x, y: p.y } } : n; })); setDirty(true); setTimeout(() => rf.fitView({ padding: 0.2, maxZoom: 1 }), 30); };
+  const removeNode = (id: string) => {
+    const x = removeStep(g.nodes, g.edges, id); if (x.nodes.length === g.nodes.length) return;
+    snap();
+    const f = toFlow(x); const keep = new Map(nodes.map((n) => [n.id, n]));
+    setNodes(f.nodes.map((n) => ({ ...n, position: keep.get(n.id)?.position ?? n.position })));
+    setEdges(f.edges); setSel(null); setDirty(true);
+  };
   const fullscreen = () => { if (document.fullscreenElement) void document.exitFullscreen(); else void wrap.current?.requestFullscreen(); };
 
   const onKey = (e: React.KeyboardEvent) => {
@@ -296,6 +306,7 @@ function DesignerInner({ orgId, ruleId, me, onRule }: { orgId: string; ruleId?: 
           <TB l="إعادة (Ctrl+Y)" onClick={redo} disabled={!hist.current.future.length}><Redo2 className="size-4" /></TB>
           <TB l="نسخ المحدد (Ctrl+D)" onClick={duplicate}><Copy className="size-4" /></TB>
           <TB l="ترتيب تلقائي" onClick={tidy}><LayoutGrid className="size-4" /></TB>
+          <TB l={view === "canvas" ? "عرض الخطوات (وضع مبسّط)" : "عرض المخطط (وضع متقدم)"} onClick={() => { setView(view === "canvas" ? "steps" : "canvas"); if (view === "steps") setTimeout(() => rf.fitView({ padding: 0.2, maxZoom: 1 }), 50); }}>{view === "canvas" ? <ListOrdered className="size-4" /> : <Workflow className="size-4" />}</TB>
           <TB l={full ? "إنهاء ملء الشاشة" : "ملء الشاشة"} onClick={fullscreen}>{full ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}</TB>
           <span className="mx-1 h-6 w-px bg-border" />
           <button onClick={() => void simulate()} disabled={simBusy} className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold hover:border-primary/50 disabled:opacity-50">{simBusy ? <Loader2 className="size-4 animate-spin" /> : <PlayCircle className="size-4" />}محاكاة</button>
@@ -322,7 +333,27 @@ function DesignerInner({ orgId, ruleId, me, onRule }: { orgId: string; ruleId?: 
           <p className="text-[11px] leading-5 text-muted-foreground">اسحب العنصر إلى المساحة، أو حدّد عنصرًا ثم اضغط عنصرًا من المكتبة (أو Enter) ليُضاف ويُربط بعده. Delete للحذف.</p>
         </aside>
 
-        <div dir="ltr" className={`relative rounded-2xl border bg-muted/30 ${full ? "min-h-[60vh]" : "h-[72vh]"}`}
+        {view === "steps" && (
+          <section aria-label="خطوات القاعدة" className={`overflow-auto rounded-2xl border bg-card p-3 shadow-sm ${full ? "min-h-[60vh]" : "h-[72vh]"}`}>
+            <p className="mb-2 text-xs text-muted-foreground">الوضع المبسّط: نفس المسار ونفس المحرك. حدّد خطوة لتعديل خصائصها، وأضف خطوة من المكتبة لتُضاف بعد المحددة.</p>
+            <ol className="space-y-1.5">
+              {outline(g.nodes, g.edges).map((row, i) => { const nd = nodes.find((x) => x.id === row.id); if (!nd) return null; const K = KIND[nd.data.kind]; const Ic = K.i; const bad = issueCount[row.id] ?? 0; return (
+                <li key={row.id} style={{ marginInlineStart: `${row.depth * 1.5}rem` }}>
+                  {row.branch && <div className="mb-0.5 text-[11px] font-semibold text-muted-foreground">↳ {row.branch}</div>}
+                  <div className={`flex items-center gap-2 rounded-xl border p-2 ${sel === row.id ? "border-primary bg-primary/5" : ""} ${bad ? "border-destructive" : ""}`}>
+                    <button type="button" onClick={() => setSel(row.id)} className="flex min-w-0 flex-1 items-center gap-2 text-start">
+                      <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-secondary text-xs font-bold">{i + 1}</span>
+                      <Ic className="size-4 shrink-0 text-primary" />
+                      <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{K.l}{bad ? <AlertTriangle className="ms-1 inline size-3.5 text-destructive" aria-label="يحتاج إكمالًا" /> : null}{row.orphan ? <span className="ms-1 text-[11px] text-warning-foreground">غير متصل</span> : null}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{summary(nd.data.kind, nd.data.d, r, meta)}</span></span>
+                    </button>
+                    {nd.data.kind !== "trigger" && <button type="button" aria-label="حذف الخطوة" title="حذف الخطوة" onClick={() => removeNode(row.id)} className="grid size-7 place-items-center rounded-lg border text-muted-foreground hover:border-destructive hover:text-destructive"><Trash2 className="size-4" /></button>}
+                  </div>
+                </li>); })}
+            </ol>
+          </section>
+        )}
+        <div dir="ltr" className={`relative rounded-2xl border bg-muted/30 ${view === "steps" ? "hidden" : ""} ${full ? "min-h-[60vh]" : "h-[72vh]"}`}
           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
           onDrop={(e) => { e.preventDefault(); const k = e.dataTransfer.getData("application/au-kind") as NodeKind; if (!k || !KIND[k]) return; addNode(k, rf.screenToFlowPosition({ x: e.clientX, y: e.clientY })); }}>
           <Ctx.Provider value={{ r, meta }}>
