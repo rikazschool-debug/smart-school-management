@@ -1,3 +1,7 @@
+# Automation navigation design
+- [x] Improve the grouped automation menu's visual hierarchy, active states and mobile layout without changing routes or permissions
+- [x] Verify desktop/mobile navigation and preview build
+
 # Finance final completion (prompt: الاستكمال النهائي)
 - [x] 1 Security: separate read/write in sf_* (guardian read-only), tests
 - [x] 2 Accountant/registrar permissions via existing student_finance perm tree

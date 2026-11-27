@@ -2,7 +2,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Zap, SlidersHorizontal, Play, Clock, Activity, Settings2, ListTree, PencilRuler, FlaskConical, OctagonAlert, CalendarClock, ScrollText, ShieldAlert, ClipboardCheck, UserCog, MessageSquareText, type LucideIcon } from "lucide-react";
+import { LayoutDashboard, Zap, SlidersHorizontal, Play, Clock, Activity, Settings2, ListTree, PencilRuler, FlaskConical, OctagonAlert, CalendarClock, ScrollText, ShieldAlert, ClipboardCheck, UserCog, MessageSquareText, BookOpenText, type LucideIcon } from "lucide-react";
+import { AutomationNav } from "./navigation";
 import { ChannelsTab } from "./channels-tab";
 import { ApprovalsTab } from "./approvals";
 import { AccessTab } from "./access";
@@ -19,13 +20,13 @@ import { arabicError } from "@/lib/session";
 import { selectCls } from "@/components/ui/native-select";
 
 export type AuTab = "overview" | "rules" | "designer" | "approvals" | "events" | "conditions" | "actions" | "schedule" | "simulate" | "monitor" | "failed" | "existing" | "audit" | "channels" | "access" | "settings";
-type TabDef = { k: AuTab; l: string; i: LucideIcon };
-/** Grouped so 13 working tabs never crowd one row. The templates library (phase 7) is not shown until it exists. */
-export const AU_GROUPS: { l: string; tabs: TabDef[] }[] = [
-  { l: "الإدارة", tabs: [{ k: "overview", i: LayoutDashboard, l: "نظرة عامة" }, { k: "rules", i: ListTree, l: "قواعد الأتمتة" }, { k: "designer", i: PencilRuler, l: "المصمم المرئي" }, { k: "approvals", i: ClipboardCheck, l: "المراجعة والاعتماد" }] },
-  { l: "الأدلة", tabs: [{ k: "events", i: Zap, l: "دليل الأحداث" }, { k: "conditions", i: SlidersHorizontal, l: "الشروط والمتغيرات" }, { k: "actions", i: Play, l: "دليل الإجراءات" }, { k: "schedule", i: Clock, l: "الجدولة" }] },
-  { l: "التشغيل", tabs: [{ k: "simulate", i: FlaskConical, l: "المحاكاة والاختبار" }, { k: "monitor", i: Activity, l: "مراقبة التنفيذ" }, { k: "failed", i: OctagonAlert, l: "العمليات الفاشلة" }, { k: "existing", i: CalendarClock, l: "الوظائف القائمة" }, { k: "channels", i: MessageSquareText, l: "القنوات والرسائل" }, { k: "audit", i: ScrollText, l: "سجل التدقيق" }] },
-  { l: "الضبط", tabs: [{ k: "access", i: UserCog, l: "الصلاحيات والتفويض" }, { k: "settings", i: Settings2, l: "الإعدادات" }] },
+export type TabDef = { k: AuTab; l: string; i: LucideIcon };
+/** Grouped so the working tabs stay scannable. The templates library (phase 7) is not shown until it exists. */
+export const AU_GROUPS: { l: string; d: string; i: LucideIcon; tabs: TabDef[] }[] = [
+  { l: "الإدارة", d: "القواعد والاعتماد", i: LayoutDashboard, tabs: [{ k: "overview", i: LayoutDashboard, l: "نظرة عامة" }, { k: "rules", i: ListTree, l: "قواعد الأتمتة" }, { k: "designer", i: PencilRuler, l: "المصمم المرئي" }, { k: "approvals", i: ClipboardCheck, l: "المراجعة والاعتماد" }] },
+  { l: "الأدلة", d: "الأحداث والشروط", i: BookOpenText, tabs: [{ k: "events", i: Zap, l: "دليل الأحداث" }, { k: "conditions", i: SlidersHorizontal, l: "الشروط والمتغيرات" }, { k: "actions", i: Play, l: "دليل الإجراءات" }, { k: "schedule", i: Clock, l: "الجدولة" }] },
+  { l: "التشغيل", d: "التنفيذ والمراقبة", i: Activity, tabs: [{ k: "simulate", i: FlaskConical, l: "المحاكاة والاختبار" }, { k: "monitor", i: Activity, l: "مراقبة التنفيذ" }, { k: "failed", i: OctagonAlert, l: "العمليات الفاشلة" }, { k: "existing", i: CalendarClock, l: "الوظائف القائمة" }, { k: "channels", i: MessageSquareText, l: "القنوات والرسائل" }, { k: "audit", i: ScrollText, l: "سجل التدقيق" }] },
+  { l: "الضبط", d: "الوصول والإعدادات", i: Settings2, tabs: [{ k: "access", i: UserCog, l: "الصلاحيات والتفويض" }, { k: "settings", i: Settings2, l: "الإعدادات" }] },
 ];
 export const AU_TABS: TabDef[] = AU_GROUPS.flatMap((g) => g.tabs);
 /** Which permission opens each tab (server re-checks every call). "owner" = system manager only, never delegable. */
@@ -65,17 +66,11 @@ export function AutomationPage({ orgId, tab, rule, me }: { orgId: string; tab: A
   const go = (t: AuTab, r?: string) => navigate({ to: "/app/automation", search: r ? { tab: t, rule: r } : { tab: t } });
   return (
     <div className="space-y-4">
-      <nav aria-label="أقسام مركز الأتمتة" className="grid gap-2 rounded-2xl border bg-card p-2 shadow-sm md:grid-cols-[repeat(4,auto)] md:justify-start">
-        {AU_GROUPS.map((g) => ({ ...g, tabs: g.tabs.filter((t) => tabAllowed(me, t.k)) })).filter((g) => g.tabs.length).map((g) => (
-          <div key={g.l} className="flex flex-wrap items-center gap-1 md:border-e md:pe-2 md:last:border-e-0">
-            <span className="w-full px-1 text-[11px] font-bold text-muted-foreground md:w-auto">{g.l}</span>
-            {g.tabs.map((t) => { const on = tab === t.k; return (
-              <button key={t.k} aria-current={on ? "page" : undefined} onClick={() => go(t.k)}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold transition-colors ${on ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground hover:bg-primary/10"}`}>
-                <t.i className="size-4" />{t.l}</button>); })}
-          </div>
-        ))}
-      </nav>
+      <AutomationNav
+        groups={AU_GROUPS.map((group) => ({ ...group, tabs: group.tabs.filter((item) => tabAllowed(me, item.k)) })).filter((group) => group.tabs.length > 0)}
+        tab={tab}
+        onSelect={(nextTab) => go(nextTab)}
+      />
       {!me.owner && me.delegations.length > 0 && <DelegationNote me={me} />}
       {!allowed ? <ForbiddenState /> : <>
       {tab === "overview" && <><Dashboard orgId={orgId} />{q.data && <Overview r={q.data} />}</>}
