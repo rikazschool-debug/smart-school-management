@@ -8,6 +8,7 @@ import { selectCls } from "@/components/ui/native-select";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { arabicError } from "@/lib/session";
 import { sanadAutomationDraft } from "@/lib/sanad-automation.functions";
+import { SanadInspection } from "./sanad-inspection";
 import { can, fmt, rpc, useOrgSchools, useRegistry, type Any, type AuMe } from "./lib";
 
 const RISK: Record<string, [string, string]> = { low: ["منخفض", "bg-primary/10 text-primary"], medium: ["متوسط", "bg-warning/15 text-warning-foreground"], high: ["مرتفع", "bg-destructive/10 text-destructive"] };
@@ -68,7 +69,7 @@ export function TemplatesTab({ orgId, me, openDesigner }: { orgId: string; me: A
   const sel = all.find((t) => t.id === open);
   return (
     <div className="space-y-4">
-      {canUse && <SanadPanel orgId={orgId} openDesigner={openDesigner} />}
+      {canUse && <SanadPanel orgId={orgId} me={me} openDesigner={openDesigner} />}
       <section className="rounded-2xl border bg-card p-4 shadow-sm">
         <div className="mb-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
           <label className="relative block"><span className="sr-only">بحث في القوالب</span><Search className="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted-foreground" aria-hidden />
@@ -191,7 +192,7 @@ function OrgTemplateTools({ orgId }: { orgId: string }) {
 }
 
 /** «سند»: Arabic description → draft checked by the engine; saved only when the user presses save, never approved or activated. */
-function SanadPanel({ orgId, openDesigner }: { orgId: string; openDesigner: (id: string) => void }) {
+function SanadPanel({ orgId, me, openDesigner }: { orgId: string; me: AuMe; openDesigner: (id: string) => void }) {
   const ask = useServerFn(sanadAutomationDraft);
   const outline = useOutline(orgId);
   const qc = useQueryClient();
@@ -219,6 +220,7 @@ function SanadPanel({ orgId, openDesigner }: { orgId: string; openDesigner: (id:
         <Button disabled={busy || text.trim().length < 10} onClick={() => void run()}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}{busy ? "سند يُعدّ المسودة…" : "إعداد المسودة"}</Button>
         {busy && <span className="text-xs text-muted-foreground">قد يستغرق ذلك حتى دقيقة.</span>}
       </div>
+      <SanadInspection orgId={orgId} me={me} />
       {res && (
         <div className="mt-3 space-y-2 rounded-xl border bg-card p-3 text-sm" aria-live="polite">
           {res.error && <p className="text-destructive">{res.error}</p>}

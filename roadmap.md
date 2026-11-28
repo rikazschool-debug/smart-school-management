@@ -1,4 +1,6 @@
 # Automation center handover (stages A–G, 7, 8, 9) — test only
+- [ ] Nov 28 approval: clean the exact 149 remaining non-protected org IDs on rikaz2027 only, after a restorable backup; preserve both protected orgs and all six schools; administrative-only temporary exception, then restore original guards.
+- [ ] Nov 28: complete the comprehensive assignment through stage 9 without publishing or touching production; do not label partial checks as acceptance.
 - [x] Verify GitHub/Lovable/test-DB sync (746/746 migrations)
 - [x] Restrict channel/source-table registries to live automation access (phase-6 rule)
 - [x] Phase 7: ready-made templates library (16 templates, group templates with versions) + tests + browser check
