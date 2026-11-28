@@ -6,7 +6,8 @@ installation, target identity, SSH capability and cloud-read credential live out
 from __future__ import annotations
 import argparse,contextlib,datetime,fcntl,hashlib,io,json,os,pathlib,re,shutil,subprocess,tarfile,time,urllib.request
 from policy import (ReleaseError,canonical,digest,make_manifest,verify_manifest,validate_history,
-                    require_approval,compare_catalog,history_key,read_sql,target_migrations)
+                    require_approval,compare_catalog,history_key,read_sql,target_migrations,
+                    registry_prerequisite_codes,registry_prerequisite_query)
 from database import Database,apply_pending,dump_backup,verify_backup_restore
 from qa import replay
 
@@ -90,19 +91,33 @@ def audit_cloud(trusted_root,work,config):
     if digest(canonical(baseline))!=config['baseline_sha256']:raise ReleaseError('cloud_source_baseline_changed')
     manifest=make_manifest(root,head)
     proof=replay(root,manifest,'cloud',work/'cloud-replay.json')
-    history_sql="SELECT coalesce(jsonb_agg(jsonb_build_object('version',version,'name',name,'ledger_md5',md5(to_jsonb(statements)::text))ORDER BY version),'[]') AS history FROM supabase_migrations.schema_migrations"
+    history_sql="SELECT coalesce(jsonb_agg(jsonb_build_object('version',version,'name',name,'ledger_md5',md5(to_jsonb(statements)::text),'source_md5',md5(array_to_string(statements,E'\\n')))ORDER BY version),'[]') AS history FROM supabase_migrations.schema_migrations"
     history=cloud_read(credential,history_sql)[0]['history']
     # Existing legacy SQL representations stay untouched. For future cloud rows the schema
     # replay is authoritative; their source formatting may differ from CLI's statement arrays.
     common={m['version']for m in target_migrations(manifest,'cloud')}
-    if set(m['version']for m in history)!=common:raise ReleaseError('cloud_history_not_represented_in_git')
+    applied={m['version']for m in history};missing=common-applied
+    if applied-common:raise ReleaseError('cloud_history_not_represented_in_git')
+    history_rows={m['version']:m for m in history};items={m['version']:m for m in manifest['migrations']};equivalent=set()
+    for rule in manifest.get('operational_cloud_migrations',[]):
+        if rule['schema_replacement']in missing:
+            original=history_rows.get(rule['version'],{})
+            if original.get('source_md5')!=items[rule['version']]['source_md5']:raise ReleaseError('operational_cloud_history_source_mismatch')
+            equivalent.add(rule['schema_replacement'])
+    registry_missing=missing-equivalent
+    registry_codes=registry_prerequisite_codes(root,manifest,registry_missing)if registry_missing else[]
     for version,expected in baseline['baseline_history']['cloud'].items():
         if next((m['ledger_md5']for m in history if m['version']==version),None)!=expected:
             raise ReleaseError('cloud_historical_ledger_changed')
     catalog_sql=(trusted_root/'catalog.sql').read_text().strip().rstrip(';')
     actual=cloud_read(credential,catalog_sql)[0]['inspection']
     expected=proof['states'][history_key(common)]['catalog'];compare_catalog(expected,actual)
-    return {'passed':True,'project':CLOUD_PROJECT,'audited_test_commit':head,'selected_release_kept_separate':True,'queries_read_only':True}
+    if registry_codes:
+        actual_registry=cloud_read(credential,registry_prerequisite_query(registry_codes))[0]['registry']
+        expected_registry=proof['prerequisite_registry']
+        if set(actual_registry)!=set(registry_codes)or any(actual_registry[k]!=expected_registry[k]for k in registry_codes):
+            raise ReleaseError('cloud_registry_seed_drift')
+    return {'passed':True,'project':CLOUD_PROJECT,'audited_test_commit':head,'selected_release_kept_separate':True,'queries_read_only':True,'unapplied_noop_registry_repairs':sorted(registry_missing),'unapplied_schema_equivalent_replacements':sorted(equivalent),'existing_registry_rows_verified':len(registry_codes),'operational_cleanup_excluded_from_vps':[r['version']for r in manifest.get('operational_cloud_migrations',[])]}
 
 def coordinate(operations,manifest,approved_id,risk_approval_id,receipt):
     """Deterministic phases, tested with injected failures. No database down/reset path exists."""

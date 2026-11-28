@@ -12,6 +12,9 @@
 !supabase/
 !supabase/migrations/
 !supabase/migrations/*.sql
+!scripts/
+!scripts/lib/
+!scripts/lib/cleanup-policy.ts
 !infrastructure/
 !infrastructure/vps-app/
 !infrastructure/vps-app/Dockerfile.verify

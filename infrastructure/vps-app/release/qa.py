@@ -1,7 +1,7 @@
 """Replay reviewed SQL in same-image, network-none PostgreSQL. Never targets production."""
 from __future__ import annotations
 import argparse,hashlib,json,pathlib,subprocess,time,uuid,os
-from policy import ReleaseError,canonical,digest,make_manifest,read_sql,history_key,sql_analysis,target_migrations
+from policy import ReleaseError,canonical,digest,make_manifest,read_sql,history_key,sql_analysis,target_migrations,registry_prerequisite_codes,registry_prerequisite_query
 from database import Database
 
 IMAGE='supabase/postgres@sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00'
@@ -17,18 +17,25 @@ def ident(value):return'"'+value.replace('"','""')+'"'
 class Sandbox:
     def __init__(self,root):self.root=root;self.name='rk-release-qa-'+uuid.uuid4().hex[:12];self.nonce=uuid.uuid4().hex;self.db=None
     def __enter__(self):
-        command="initdb -D /qa/data -U qa_root --auth-local=trust --auth-host=reject >/qa/init.log 2>&1; exec postgres -D /qa/data -c shared_preload_libraries=pg_cron,pg_net -c cron.database_name=postgres -c cron.launch_active_jobs=off -c listen_addresses='' -c unix_socket_directories=/tmp -c ssl=off -c max_connections=40 -c shared_buffers=64MB -c wal_level=logical"
+        # Vault needs a server-managed root key. Generate it inside this sandbox's
+        # tmpfs only; never mount, copy or log either environment's real key.
+        command="umask 077; initdb -D /qa/data -U qa_root --auth-local=trust --auth-host=reject >/qa/init.log 2>&1; exec postgres -D /qa/data -c shared_preload_libraries=pgsodium,supabase_vault,pg_cron,pg_net -c pgsodium.getkey_script=/usr/share/postgresql/extension/pgsodium_getkey -c cron.database_name=postgres -c cron.launch_active_jobs=off -c listen_addresses='' -c unix_socket_directories=/tmp -c ssl=off -c max_connections=40 -c shared_buffers=64MB -c wal_level=logical"
         settings=json.loads((self.root/'infrastructure/vps-app/baseline/managed-fixture.json').read_text())['sandbox_session_settings']
         flags=[]
         for key,value in settings.items():
             if key!='session_preload_libraries'and not key.startswith('supautils.'):raise ReleaseError('unexpected_qa_server_setting')
             flags+=['-c',key+'='+value]
-        run(['docker','run','-d','--name',self.name,'--label',LABEL+'='+self.nonce,'--network','none','--user','100:101','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','1536m','--cpus','1','--pids-limit','150','--tmpfs','/qa:rw,uid=100,gid=101,mode=0700,size=1024m','--tmpfs','/tmp:rw,uid=100,gid=101,mode=1777,size=32m','--entrypoint','/bin/bash',IMAGE,'-euc',command+' "$@"','qa-postgres',*flags])
+        run(['docker','run','-d','--name',self.name,'--label',LABEL+'='+self.nonce,'--network','none','--user','100:101','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','1536m','--cpus','1','--pids-limit','150','--tmpfs','/qa:rw,uid=100,gid=101,mode=0700,size=1024m','--tmpfs','/tmp:rw,uid=100,gid=101,mode=1777,size=32m','--tmpfs','/etc/postgresql-custom:rw,noexec,nosuid,uid=100,gid=101,mode=0700,size=1m','--entrypoint','/bin/bash',IMAGE,'-euc',command+' "$@"','qa-postgres',*flags])
         for _ in range(120):
             p=subprocess.run(['docker','exec',self.name,'pg_isready','-h','/tmp','-U','qa_root','-d','postgres'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
             if p.returncode==0:break
             time.sleep(.25)
-        else:self.cleanup();raise ReleaseError('isolated_postgres_start_timeout')
+        else:
+            diagnostic=os.environ.get('RK_RELEASE_QA_DIAGNOSTICS')
+            if diagnostic:
+                logs=subprocess.run(['docker','logs',self.name],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                pathlib.Path(diagnostic).joinpath('qa-startup-error.log').write_bytes(logs.stdout+logs.stderr)
+            self.cleanup();raise ReleaseError('isolated_postgres_start_timeout')
         info=json.loads(run(['docker','inspect',self.name]))[0]
         if info['HostConfig']['NetworkMode']!='none'or info['HostConfig']['PortBindings']:raise ReleaseError('qa_isolation_not_established')
         self.db=Database(self.name,'qa_root','/tmp');return self
@@ -51,6 +58,10 @@ def bootstrap_roles(sandbox,root):
         lines.append('CREATE ROLE '+ident(role['name'])+' '+' '.join(attrs)+';')
     for membership in metadata['memberships']:
         lines.append('GRANT '+ident(membership['role'])+' TO '+ident(membership['member'])+' WITH ADMIN '+str(membership['admin']).upper()+', INHERIT '+str(membership['inherit']).upper()+', SET '+str(membership['set']).upper()+';')
+    # Verified read-only on both installations, 2026-11-28. pg_dump does not
+    # preserve role settings; pgcrypto's gen_random_bytes lives in extensions.
+    # Reproduce that managed migration session in QA, without changing live roles.
+    lines.append(r'ALTER ROLE postgres SET search_path TO "\$user", public, extensions;')
     sandbox.db.sql('\n'.join(lines))
     return metadata
 
@@ -73,10 +84,9 @@ def replay(root,manifest,target='vps',output=None,applied_versions=None,integrat
     # overlay before new shared releases, even if its reserved timestamp is later.
     historical_stream=sorted([x for x in manifest['migrations']if x['version']in common_versions]+extra,key=lambda x:x['version'])
     additions=[x for x in target_migrations(manifest,target)if x['version']not in common_versions]
-    if applied_versions is None:additions.sort(key=lambda x:x['version'])
-    else:
+    if applied_versions is not None:
         applied=set(applied_versions)
-        additions.sort(key=lambda x:(x['version']not in applied,x['version']))
+        additions.sort(key=lambda x:x['version']not in applied)
     stream=historical_stream+sorted(optional,key=lambda x:x['version'])+additions
     historical={x['version']:x for x in base['common_migrations']}
     baseline_versions=common_versions|{x['version']for x in extra}
@@ -115,7 +125,13 @@ def replay(root,manifest,target='vps',output=None,applied_versions=None,integrat
                 db.sql('BEGIN;\n'+body+'\nCOMMIT;')
                 tag='$baseline_'+digest(source)[:16]+'$'
                 db.sql("INSERT INTO supabase_migrations.schema_migrations(version,name,statements)VALUES('"+item['version']+"','"+item['name']+"',ARRAY["+tag+source+tag+"]);" )
-            else:db.apply(item,root,versions)
+            else:
+                execution=item
+                if item.get('qa_replay_path'):
+                    if target!='cloud'or not db.container.startswith('rk-release-qa-'):raise ReleaseError('operational_overlay_requires_isolated_cloud')
+                    execution={**item,'path':item['qa_replay_path']}
+                    if digest(read_sql(root/execution['path']))!=item['qa_replay_sha256']:raise ReleaseError('operational_overlay_changed')
+                db.apply(execution,root,versions)
             versions.append(item['version']);versions.sort()
             if baseline_versions.issubset(versions):
                 states[history_key(versions)]={'versions':list(versions),'catalog':db.catalog(root)}
@@ -126,7 +142,11 @@ def replay(root,manifest,target='vps',output=None,applied_versions=None,integrat
         counts=db.json("SELECT jsonb_build_object('users',(SELECT count(*)FROM auth.users),'schools',(SELECT count(*)FROM schools),'accounts',(SELECT count(*)FROM acct_outbox),'events',(SELECT count(*)FROM evt_outbox),'cron',current_setting('cron.launch_active_jobs'))")
         if counts['users']or counts['schools']or counts['accounts']or counts['events']or counts['cron']!='off':
             raise ReleaseError('replay_contains_business_data_or_active_jobs')
-        proof={'passed':True,'target':target,'source_commit':manifest['commit'],'manifest_id':manifest['manifest_id'],'migrations_replayed':len(versions),'optional_bootstrap_tested_in_qa':len(optional),'states':states,'network':'none','public_ports':False,'real_provider_calls':False,'production_data_copied':False,'counts':counts,'integration_acceptance':acceptance}
+        shared={m['version']for m in target_migrations(manifest,'cloud')}
+        repairs=[r['migration']for r in manifest.get('migration_prerequisites',[])if r['migration']in shared]
+        registry_codes=registry_prerequisite_codes(root,manifest,repairs)
+        registry=db.json(registry_prerequisite_query(registry_codes))if registry_codes else{}
+        proof={'passed':True,'target':target,'source_commit':manifest['commit'],'manifest_id':manifest['manifest_id'],'migrations_replayed':len(versions),'optional_bootstrap_tested_in_qa':len(optional),'states':states,'network':'none','public_ports':False,'real_provider_calls':False,'production_data_copied':False,'counts':counts,'integration_acceptance':acceptance,'prerequisite_registry':registry}
     proof['temporary_container_removed']=True
     if output:output.write_text(canonical(proof))
     return proof

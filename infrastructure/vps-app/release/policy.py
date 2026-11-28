@@ -95,7 +95,48 @@ def migration_files(root):
 
 def target_migrations(manifest,target):
     if target not in {'vps','cloud'}:raise ReleaseError('unknown_database_target')
-    return [m for m in manifest['migrations']if target=='vps'or m.get('scope','shared')=='shared']
+    ordered=[m for m in manifest['migrations']if m.get('scope','shared')in('shared',target)]
+    for rule in manifest.get('migration_prerequisites',[]):
+        by_version={m['version']:m for m in ordered}
+        if rule['migration']not in by_version:continue
+        if rule['before']not in by_version or rule['after']not in by_version:
+            raise ReleaseError('migration_prerequisite_target_missing')
+        item=by_version[rule['migration']];ordered.remove(item)
+        before=next(i for i,m in enumerate(ordered)if m['version']==rule['before'])
+        ordered.insert(before,item)
+    positions={m['version']:i for i,m in enumerate(ordered)}
+    for rule in manifest.get('migration_prerequisites',[]):
+        if rule['migration']in positions and not positions[rule['after']]<positions[rule['migration']]<positions[rule['before']]:
+            raise ReleaseError('migration_prerequisite_order_invalid')
+    return ordered
+
+def normalized_ast(value):
+    if isinstance(value,dict):return {k:normalized_ast(v)for k,v in value.items()if k not in {'location','arg_location','stmt_location','stmt_len','list_start','list_end'}}
+    if isinstance(value,list):return [normalized_ast(v)for v in value]
+    return value
+
+def operational_cloud_overlays(root,files,frozen):
+    path=root/'infrastructure/vps-app/operational-cloud-migrations.json'
+    if not path.exists():return []
+    if path.is_symlink():raise ReleaseError('operational_migration_path_not_regular')
+    rows=json.loads(path.read_text());by_version={m['version']:m for m in files};seen=set()
+    if not isinstance(rows,list):raise ReleaseError('operational_migration_format_invalid')
+    for rule in rows:
+        if not isinstance(rule,dict)or set(rule)!={'version','source_sha256','schema_replacement','schema_sha256','schema_statements'}:
+            raise ReleaseError('operational_migration_format_invalid')
+        old=by_version.get(rule['version']);replacement=by_version.get(rule['schema_replacement']);n=rule['schema_statements']
+        if not old or not replacement or old is replacement or old['version']in frozen or replacement['version']in frozen or old.get('scope','shared')!='shared'or replacement.get('scope','shared')!='shared'or old['version']in seen:
+            raise ReleaseError('operational_migration_reference_invalid')
+        if old['sha256']!=rule['source_sha256']or replacement['sha256']!=rule['schema_sha256']:
+            raise ReleaseError('operational_migration_source_changed')
+        original=json.loads(parser.parse_sql_json(read_sql(root/old['path'])))['stmts']
+        declarative=json.loads(parser.parse_sql_json(read_sql(root/replacement['path'])))['stmts']
+        if not isinstance(n,int)or isinstance(n,bool)or not 0<n<len(original)or len(declarative)!=n or normalized_ast(original[:n])!=normalized_ast(declarative):
+            raise ReleaseError('operational_schema_replacement_changed')
+        if any(next(iter(x['stmt']))not in{'CreateFunctionStmt','DoStmt','GrantStmt','CommentStmt'}for x in declarative):
+            raise ReleaseError('operational_schema_replacement_not_declarative')
+        old['scope']='cloud';old['qa_replay_path']=replacement['path'];old['qa_replay_sha256']=replacement['sha256'];seen.add(old['version'])
+    return rows
 
 def make_manifest(root,sha):
     if not re.fullmatch('[0-9a-f]{40}',sha):raise ReleaseError('full_commit_sha_required')
@@ -114,7 +155,21 @@ def make_manifest(root,sha):
         if item.get('path')and digest(read_sql(root/item['path']))!=item['sha256']:
             raise ReleaseError('approved_vps_exception_changed')
     frozen={m['version']for m in base['common_migrations']};last=max(frozen)
+    operational=operational_cloud_overlays(root,files,frozen)
     additions=[m for m in files if m['version']not in frozen]
+    order_path=root/'infrastructure/vps-app/migration-prerequisites.json'
+    prerequisites=[]
+    if order_path.exists():
+        if order_path.is_symlink():raise ReleaseError('migration_prerequisite_path_not_regular')
+        prerequisites=json.loads(order_path.read_text())
+        if not isinstance(prerequisites,list):raise ReleaseError('migration_prerequisite_format_invalid')
+        versions={m['version']for m in files};seen=set()
+        for rule in prerequisites:
+            if not isinstance(rule,dict)or set(rule)!={'migration','before','after'}or any(not isinstance(v,str)or not re.fullmatch('[0-9]{14}',v)for v in rule.values()):
+                raise ReleaseError('migration_prerequisite_format_invalid')
+            if rule['migration']in frozen or rule['before']in frozen or set(rule.values())-versions or len(set(rule.values()))!=3 or rule['migration']in seen:
+                raise ReleaseError('migration_prerequisite_reference_invalid')
+            seen.add(rule['migration'])
     for item in additions:
         if item['version']<=last or item['version']in{m['version']for m in base['vps_only']+base.get('optional_vps_only',[])}:
             raise ReleaseError('backdated_or_reserved_migration')
@@ -131,10 +186,13 @@ def make_manifest(root,sha):
     manifest={'format':1,'repository':'rikazschool-debug/smart-school-management','commit':sha,
               'target':'rikaz-vps-production','baseline_sha256':digest(canonical(base)),
               'migrations':files,'additions':[m['version']for m in additions],
+              'migration_prerequisites':prerequisites,
+              'operational_cloud_migrations':operational,
               'risks':{m['version']:m['analysis']['risks']for m in additions if m['analysis']['risks']},
               'protected_runtime_files':protected,'database_rollback':'forward_only',
               'application_rollback':'only_after_old_image_new_schema_compatibility',
               'real_provider_calls_in_tests':False}
+    target_migrations(manifest,'cloud');target_migrations(manifest,'vps')
     manifest['manifest_id']=digest(canonical(manifest));return manifest
 
 def verify_manifest(manifest):
@@ -166,10 +224,14 @@ def validate_history(manifest,base,history,target):
     pending=[m for m in target_migrations(manifest,target)if m['version']not in actual]
     # Shared and VPS-only ledgers advance independently. Neither stream may hide a hole,
     # but a later VPS version must not force an unrelated cloud migration to be renamed.
-    for scope in ['shared','vps']:
-        stream={v for v,m in common.items()if m.get('scope','shared')==scope}
-        applied=sorted(set(actual)&stream);missing=[m['version']for m in pending if m['version']in stream]
+    for scope in ['shared','vps','cloud']:
+        prerequisites={r['migration']for r in manifest.get('migration_prerequisites',[])}
+        stream=[m['version']for m in target_migrations(manifest,target)if m.get('scope','shared')==scope and m['version']not in prerequisites]
+        positions={v:i for i,v in enumerate(stream)}
+        applied=[positions[v]for v in stream if v in actual];missing=[positions[v]for v in stream if v not in actual]
         if missing and applied and min(missing)<max(applied):raise ReleaseError('non_suffix_pending_migrations')
+    for rule in manifest.get('migration_prerequisites',[]):
+        if rule['migration']in actual and rule['after']not in actual:raise ReleaseError('applied_prerequisite_dependency_missing')
     return pending
 
 def require_approval(manifest,approved_id,risk_approval_id):
@@ -189,6 +251,42 @@ def compare_catalog(expected,actual):
 
 def history_key(versions):
     return digest(canonical(sorted(versions)))
+
+def registry_prerequisite_codes(root,manifest,versions):
+    """Only constant INSERT/ON CONFLICT NOTHING platform catalogue repairs can lag on cloud.
+
+    A missing schema/business migration is never admitted. Both the complete schema
+    and the repaired catalogue rows must still match the isolated replay.
+    """
+    declared={r['migration']for r in manifest.get('migration_prerequisites',[])}
+    items={m['version']:m for m in target_migrations(manifest,'cloud')}
+    codes=set()
+    def constant(value):
+        if not isinstance(value,dict):return False
+        if set(value)=={'A_Const'}:return True
+        if set(value)=={'A_ArrayExpr'}:return all(constant(x)for x in value['A_ArrayExpr'].get('elements',[]))
+        return False
+    for version in versions:
+        if version not in declared or version not in items:raise ReleaseError('cloud_history_not_represented_in_git')
+        stmts=json.loads(parser.parse_sql_json(read_sql(root/items[version]['path'])))['stmts']
+        if len(stmts)!=1 or set(stmts[0]['stmt'])!={'InsertStmt'}:raise ReleaseError('cloud_missing_migration_is_not_registry_seed')
+        node=stmts[0]['stmt']['InsertStmt'];rel=node['relation'];select=node.get('selectStmt',{}).get('SelectStmt',{})
+        if set(node)-{'relation','cols','selectStmt','onConflictClause','override'}or node.get('override','OVERRIDING_NOT_SET')!='OVERRIDING_NOT_SET'or rel.get('schemaname')!='public'or rel.get('relname')!='au_events'or node.get('onConflictClause',{}).get('action')!='ONCONFLICT_NOTHING'or set(select)-{'op','valuesLists','limitOption'}or select.get('limitOption','LIMIT_OPTION_DEFAULT')!='LIMIT_OPTION_DEFAULT':
+            raise ReleaseError('cloud_missing_migration_is_not_registry_seed')
+        cols=[x['ResTarget']['name']for x in node.get('cols',[])];rows=select.get('valuesLists',[])
+        if not rows or 'code'not in cols:raise ReleaseError('cloud_registry_seed_invalid')
+        for row in rows:
+            values=row['List']['items']if isinstance(row,dict)else row
+            if len(values)!=len(cols)or not all(constant(v)for v in values):raise ReleaseError('cloud_registry_seed_invalid')
+            code=values[cols.index('code')].get('A_Const',{}).get('sval',{}).get('sval')
+            if not isinstance(code,str)or not re.fullmatch('[a-z][a-z0-9_.]{1,100}',code):raise ReleaseError('cloud_registry_seed_invalid')
+            codes.add(code)
+    return sorted(codes)
+
+def registry_prerequisite_query(codes):
+    if any(not re.fullmatch('[a-z][a-z0-9_.]{1,100}',c)for c in codes):raise ReleaseError('cloud_registry_seed_invalid')
+    quoted=','.join("'"+c+"'"for c in codes)or'NULL'
+    return "SELECT coalesce(jsonb_object_agg(code,md5(to_jsonb(e)::text)),'{}') AS registry FROM public.au_events e WHERE code IN("+quoted+")"
 
 def migration_transaction(item,source,expected_versions):
     analysis=sql_analysis(source)

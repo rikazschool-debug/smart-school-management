@@ -1,8 +1,8 @@
 """Opt-in tests require only Docker; the sole target is a newly created network-none DB."""
 import concurrent.futures,json,os,pathlib,tempfile,unittest
 from policy import ReleaseError,digest
-from database import apply_pending,dump_backup,verify_backup_restore
-from qa import Sandbox
+from database import Database,apply_pending,dump_backup,verify_backup_restore
+from qa import Sandbox,bootstrap
 
 @unittest.skipUnless(os.environ.get('RK_RELEASE_DB_TESTS')=='1','isolated Docker database tests are opt-in')
 class DatabaseReleaseTests(unittest.TestCase):
@@ -60,5 +60,11 @@ class DatabaseReleaseTests(unittest.TestCase):
         self.db.sql("BEGIN READ ONLY;SET LOCAL ROLE rikaz_mcp_admin;SELECT version,name FROM supabase_migrations.schema_migrations;ROLLBACK;")
         with self.assertRaises(ReleaseError):self.db.sql("SET ROLE rikaz_mcp_admin;CREATE TABLE public.not_allowed(id int);")
         with self.assertRaises(ReleaseError):self.db.sql("SET ROLE rikaz_mcp_admin;SELECT statements FROM supabase_migrations.schema_migrations;")
+    def test_isolated_vault_roundtrip_with_qa_only_server_key(self):
+        with Sandbox(self.root)as isolated:
+            bootstrap(isolated,self.root);db=Database(isolated.name,'postgres','/tmp')
+            db.sql("SELECT vault.create_secret('qa-only-roundtrip','qa-vault-check','isolated fixture');")
+            result=db.json("SELECT jsonb_build_object('same',decrypted_secret='qa-only-roundtrip','pgsodium',position('pgsodium' in current_setting('shared_preload_libraries'))>0)FROM vault.decrypted_secrets WHERE name='qa-vault-check'")
+            self.assertEqual(result,{'same':True,'pgsodium':True})
 
 if __name__=='__main__':unittest.main()
